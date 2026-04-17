@@ -1,11 +1,16 @@
+import os
+import bm25s
+import json
 from typing import List, Dict
 from collections import defaultdict
 from src.models import MinimalSource
 
 
-class Indexer():
+class Indexer:
     def __init__(self):
-        pass
+        self.corpus_chunks: List[MinimalSource] = []
+        # Analogy: spawning the Librarian
+        self.retriever = bm25s.BM25()
 
     def _make_corpus(self, chunks: List[MinimalSource]) -> List[str]:
         """converts coordiante-based chunks into readable strings"""
@@ -29,21 +34,41 @@ class Indexer():
                     corpus.append(chunk_text)
                     pass
 
-            except Exception as e:
-                # Defensive programming: skip unreadable files gracefully
-                print(f"Warning: Could not read {each_path} for corpus generation.")
+            except Exception:
+                print(f"Warning: Could not read {each_path} for corpus creation.")
 
         return corpus
 
     def build_index(self, chunks: List[MinimalSource]) -> None:
+        """
+        Extracts text, tokenizes it, and builds the BM25 index.
+        """
+        self.corpus_chunks = chunks
 
+        print("Extracting corpus from chunks...")
         corpus: List[str] = self._make_corpus(chunks)
-        # 2. Tokenize (split into words)
+
+        print("Tokenizing corpus...")
         corpus_tokens = bm25s.tokenize(corpus)
 
-        # 3. Build the Index
+        print("Training BM25 Index...")
+        # find a libririan
         retriever = bm25s.BM25()
+        # make the libririan read it all
         retriever.index(corpus_tokens)
 
+        print("Indexing Complete!")
+
     def save_index(self, save_dir: str) -> None:
-        pass
+        """
+        save the 2 pieces of data
+        """
+        print(f"Saving index to {save_dir}...")
+        self.retriever.save(save_dir)
+
+        # convert pydantic to standard dict
+        stand_chunks = [chunk.model_dump() for chunk in self.corpus_chunks]
+
+        with open(os.path.join(save_dir, 'chunks.json'), 'w') as file:
+            json.dump(stand_chunks, file)
+        print("Save complete!")

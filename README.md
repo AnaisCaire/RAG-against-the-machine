@@ -43,5 +43,22 @@ the last and first index for the chunking.
 ## 4 Indexing
 
     first problem, BM25 or TF-IDF are mathemaitcal models and dont undestant what a file path and 
-    a first_index/last_index from the MinimalSource means...
+    a first_index/last_index from the MinimalSource means.
     we need to find the raw string again...
+    with the make_corpus function
+
+    build_index function:
+    https://github.com/xhluca/bm25s == to understand how to quick start the bm25s
+    ok but what is a retreiver???
+    bm25 = best matching 25
+    its a scoring technique in stats.
+    counts every word frequency in every chunk. and then puts a penality to words that apprear 
+    in every chunk. 
+    then the actual index is where we save the mathematical weights of every token into an
+    optimised data base. (inverted index) == because we inverse document frequence, because we 
+    penalize the most frequent. 
+
+    now, the subjects states: "Store the index for fast retrieval".
+    we will create a directory to save 2 things:
+        1. the BM25 Model
+        2. my chunks
