@@ -15,7 +15,40 @@ class BaseChunker:
 class TextChunker(BaseChunker):
     """Handles Markdown and standard text chunking."""
     def chunk(self, file_path: str, content: str) -> List[MinimalSource]:
-        pass
+        chunks: List[MinimalSource] = []
+        content_length = len(content)
+        current_idx = 0
+        break_index = 0
+
+        while current_idx < content_length:
+            # get the max end index of the chunk
+            max_end = min(current_idx + self.max_chunk_size, content_length)
+
+            if max_end == content_length:
+                chunks.append(MinimalSource(
+                    file_path=file_path,
+                    first_character_index=current_idx,
+                    last_character_index=max_end
+                ))
+                break
+            else:
+                node_text = content[current_idx:max_end]
+                if node_text.rfind('\n\n') >= 0:
+                    break_index = node_text.rfind('\n\n') + 2
+                elif node_text.rfind('\n') >= 0:
+                    break_index = node_text.rfind('\n') + 1
+                elif node_text.rfind(' ') >= 0:
+                    break_index = node_text.rfind(' ') + 1
+                else:
+                    break_index = len(node_text)
+
+                absolute_end = current_idx + break_index
+                chunks.append(MinimalSource(
+                    file_path=file_path,
+                    first_character_index=current_idx,
+                    last_character_index=absolute_end))
+                current_idx = absolute_end
+        return chunks
 
 
 class CodeChunker(BaseChunker):
@@ -48,7 +81,7 @@ class CodeChunker(BaseChunker):
 
         # for lint:
         lineno = getattr(node, 'lineno', None)
-        end_lineno = getattr(node, 'end_lineni', None)
+        end_lineno = getattr(node, 'end_lineno', None)
         col_offset = getattr(node, 'col_offset', None)
         end_col_offset = getattr(node, 'end_col_offset', None)
         body = getattr(node, 'body', None)
@@ -87,8 +120,7 @@ class CodeChunker(BaseChunker):
 
             return chunks
 
-        # 4. If the node didn't have coordinates,
-        # OR we are at the top-level Module,
+        # 4. for invisibles nodes e.g(the top-level Module)
         # we iterate through its body.
         if body:
             for child in body:
@@ -100,7 +132,5 @@ class CodeChunker(BaseChunker):
     def chunk(self, file_path: str, content: str) -> List[MinimalSource]:
 
         line_starts = self._line_start_helper(content)
-        # Parse the content into an AST tree
         tree = ast.parse(content)
-        breakpoint()
         return (self._process_node(tree, content, line_starts, file_path))
