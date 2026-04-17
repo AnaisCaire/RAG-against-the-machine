@@ -15,7 +15,7 @@ clean:
 	@echo "--- Cleanup Complete ---"
 
 debug:
-	uv run python -m pdb -c continue -m src
+	PYTHONPATH=. uv run python -m pdb -c continue -m src
 
 lint:
 	@echo "--- Running Flake8 ---"
