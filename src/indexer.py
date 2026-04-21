@@ -29,7 +29,6 @@ class Indexer:
 
                 # 3. Extract the text for every chunk in this file
                 for chunk in file_chunks:
-                    # ??? HOW DO WE EXTRACT THE TEXT? ???
                     chunk_text = content[chunk.first_character_index: chunk.last_character_index]
                     corpus.append(chunk_text)
                     pass
@@ -50,12 +49,11 @@ class Indexer:
 
         print("Tokenizing corpus...")
         corpus_tokens = bm25s.tokenize(corpus)
-
+        # corpus_tokens is a tuple of (id, token)
         print("Training BM25 Index...")
-        # find a libririan
-        retriever = bm25s.BM25()
+
         # make the libririan read it all
-        retriever.index(corpus_tokens)
+        self.retriever.index(corpus_tokens)
 
         print("Indexing Complete!")
 
@@ -72,3 +70,21 @@ class Indexer:
         with open(os.path.join(save_dir, 'chunks.json'), 'w') as file:
             json.dump(stand_chunks, file)
         print("Save complete!")
+
+    def search(self, query: str, k: int = 5) -> List[MinimalSource]:
+        """
+        1. Tokenizes the user's query string using bm25s.tokenize.
+        2. Pass those tokens to self.retriever.retrieve(..., k=k).
+        3. Loop through the returned indices to fetch the
+            correct MinimalSource objects from the self.corpus_chunks
+        """
+        results: List[MinimalSource] = []
+        token_query = bm25s.tokenize(query)
+        # scores = data relevancy (14.344)
+        # tiket is phyiscal position in list
+        docs, _ = self.retriever.retrieve(token_query, k=k)
+        for ticket in docs[0]:
+            winning_chunks = self.corpus_chunks[ticket]
+            results.append(winning_chunks)
+            pass
+        return results
