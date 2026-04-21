@@ -1,5 +1,5 @@
 
-CODE_DIRS = src
+CODE_DIRS = student
 
 .PHONY: install debug run lint lint-strict
 
@@ -7,7 +7,7 @@ install:
 	uv sync
 
 run:
-	 uv run python -m src 
+	 uv run python -m student
 
 clean:
 	rm -rf .mypy_cache .pytest_cache
@@ -15,7 +15,7 @@ clean:
 	@echo "--- Cleanup Complete ---"
 
 debug:
-	PYTHONPATH=. uv run python -m pdb -c continue -m src
+	PYTHONPATH=. uv run python -m pdb -c continue -m student $(CMD)
 
 lint:
 	@echo "--- Running Flake8 ---"

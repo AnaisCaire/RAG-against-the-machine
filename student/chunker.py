@@ -1,6 +1,6 @@
 import ast
 from typing import List
-from src.models import MinimalSource
+from student.models import MinimalSource
 
 
 class BaseChunker:

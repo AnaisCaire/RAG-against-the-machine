@@ -96,3 +96,11 @@ the last and first index for the chunking.
     
     2. generate answer:
         we need to use the MinimalAnswer model 
+
+## batch 
+
+    we need to read the Json files.
+    theses 2 functions do that exactly
+    - search_dataset (Chapter V.6.5): Reads the UnansweredQuestions JSON, searches the index, and saves a StudentSearchResults JSON.
+
+    - answer_dataset (Chapter V.6.7): Reads the newly created StudentSearchResults JSON, passes those pre-found tickets to the LLM, and saves a StudentSearchResultsAndAnswer JSON.

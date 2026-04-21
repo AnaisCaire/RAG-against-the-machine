@@ -1,7 +1,7 @@
 import os
 from typing import List
-from src.models import MinimalSource
-from src.chunker import CodeChunker, TextChunker
+from student.models import MinimalSource
+from student.chunker import CodeChunker, TextChunker
 
 
 class IngestionEngine:

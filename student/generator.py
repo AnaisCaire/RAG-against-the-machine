@@ -1,6 +1,6 @@
 from typing import List
 from transformers import pipeline
-from src.models import MinimalSource, MinimalAnswer
+from student.models import MinimalSource, MinimalAnswer
 
 
 class Generator:
@@ -46,15 +46,36 @@ class Generator:
 
         # 1. Build the prompt
         prompt = self._build_prompt(query, retrieved_sources)
-
-        # 2. Ask the AI to generate text
+        # 2. We structure the prompt as a conversation!
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a highly precise technical assistant. "
+                    "Answer the user's question based ONLY on the provided context. "
+                    "Provide the final answer directly and concisely. "
+                    "Do NOT show your thinking process. Do NOT use LaTeX or boxed formatting."
+                )
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+        # 3. Ask the AI to generate text
         # We limit the tokens to prevent it from rambling forever
         print("Generating answer...")
-        ai_output = self.pipeline(prompt, max_new_tokens=256, return_full_text=False)
-        breakpoint()
-        # 3. Extract the raw string from the pipeline output
+        ai_output = self.pipeline(
+            messages,
+            max_new_tokens=512,
+            return_full_text=False,
+            do_sample=False,
+            repetition_penalty=1.2
+        )
+        # 4. Extract the raw string from the pipeline output
         raw_answer_string = ai_output[0]['generated_text'].strip()
-
+        if "</think>" in raw_answer_string:
+            raw_answer_string = raw_answer_string.split("</think>")[-1].strip()
         # 4. Package everything into the MinimalAnswer Pydantic model
         return MinimalAnswer(
             question_id=question_id,
