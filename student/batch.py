@@ -3,6 +3,7 @@ import json
 from student.models import RagDataset, StudentSearchResults, StudentSearchResultsAndAnswer, MinimalSearchResults
 from student.indexer import Indexer
 from student.generator import Generator
+from tqdm import tqdm
 
 
 class BatchProcessor:
@@ -58,27 +59,46 @@ class BatchProcessor:
         """
         Reads search results, generates an answer for each, and saves the final output.
         """
+        import json
+        import os
+
         print(f"Generating answers for: {student_search_results_path}")
-        
+
         # 1. Open the JSON file at student_search_results_path
-        # TODO: raw_data = ...
-        
+        with open(student_search_results_path, 'r', encoding='utf-8') as f:
+            raw_data = json.load(f)
+
         # 2. Parse it into your StudentSearchResults Pydantic model
-        # TODO: search_data = StudentSearchResults(**raw_data)
-        
+        search_data = StudentSearchResults(**raw_data)
+
         # 3. Create an empty list to hold your MinimalAnswer objects
-        # TODO: answers_list = []
-        
-        # 4. Loop through search_data.search_results
-        # TODO: for result in search_data.search_results:
-            # a. Pass result.question_id, result.question, and result.retrieved_sources 
-            #    into self.generator.generate_answer(...)
-            # b. Append the returned MinimalAnswer to answers_list
-            
+        answers_list = []
+
+        # 4. Loop through search_data.search_results and generate answers
+        for result in tqdm(search_data.search_results, desc="Generating Answers"):
+            # Generate the answer using your AI pipeline
+            answer_obj = self.generator.generate_answer(
+                question_id=result.question_id,
+                query=result.question,
+                retrieved_sources=result.retrieved_sources
+            )
+            answers_list.append(answer_obj)
+
         # 5. Package answers_list and search_data.k into a StudentSearchResultsAndAnswer object
-        # TODO: final_output = StudentSearchResultsAndAnswer(...)
-        
-        # 6. Save to disk exactly like Step 6 above.
-        # TODO: Save final_output.model_dump() to the save_directory.
-        
-        print("Answer dataset complete!")
+        final_output = StudentSearchResultsAndAnswer(
+            search_results=answers_list,
+            k=search_data.k
+        )
+
+        # 6. Dynamically build the save path and save to disk
+        filename = os.path.basename(student_search_results_path)
+        full_save_path = os.path.join(save_directory, filename)
+
+        # Force your OS to create the folder if it doesn't exist
+        os.makedirs(save_directory, exist_ok=True)
+
+        # Save the Pydantic object to disk as a nicely indented JSON file
+        with open(full_save_path, 'w', encoding='utf-8') as f:
+            f.write(final_output.model_dump_json(indent=4))
+
+        print(f"Answer dataset complete! Saved to {full_save_path}")

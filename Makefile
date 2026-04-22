@@ -7,7 +7,7 @@ install:
 	uv sync
 
 run:
-	 uv run python -m student
+	 uv run python -m student $(CMD)
 
 clean:
 	rm -rf .mypy_cache .pytest_cache

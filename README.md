@@ -1,7 +1,46 @@
 # RAG-against-the-machine
 Build a Retrieval-Augmented Generation system that answers questions about codebases by retrieving relevant information and generating evidence-based responses, implementing intelligent chunking, efficient retrieval (TF-IDF/BM25)
 
+## Installation
 
+This project uses `uv` as its package and dependency manager. To set up the environment and install all required dependencies (like `transformers`, `pydantic`, `bm25s`, `fire`, etc.), ensure `uv` is installed on your system and run:
+
+```bash
+make install
+```
+
+## Usage and Execution
+
+The entire Retrieval-Augmented Generation (RAG) pipeline is exposed as a Command-Line Interface (CLI) powered by Python Fire. All commands are executed through the student module module.
+### 1. build the index
+```bash
+uv run python -m student index --max_chunk_size 2000
+```
+### 2. Answer a single Query
+if you want to ask a specific question, use this.
+```bash
+uv run python -m student answer "What activation formats does the fused batched MoE layer return in vLLM?" --k 10
+```
+
+### 3. Batch Search a Dataset
+For processing the entire dataset of questions and output the retrieved source coordinates to a JSON file, use this.
+```bash
+uv run python -m student search_dataset --dataset_path data/datasets/UnansweredQuestions/dataset_docs_public.json --k 10 --save_directory data/output/search_results
+```
+
+### 4. Batch Answer a Dataset
+To generate all the AI answers for the searched dataset, and save the final result, use this.
+```bash
+uv run python -m student answer_dataset --student_search_results_path data/output/search_results/dataset_docs_public.json --save_directory data/output/search_results_and_answer
+```
+
+### 5. Evaluate Performance
+to evaluate the accuracy of the answers, with the ground truth dataset, use this.
+```bash
+uv run python -m student evaluate --student_results_path="data/output/search_results/dataset_docs_public.json" --dataset_path="data/datasets/AnsweredQuestions/dataset_docs_public.json" --k=10
+```
+
+# Explanation of my work:
 ## 1. models + makefile + pyproject.toml
     copied models from subject
 

@@ -1,7 +1,13 @@
 import os
 from typing import List
+import logging
 from student.models import MinimalSource
 from student.chunker import CodeChunker, TextChunker
+
+# Configure logger
+logging.basicConfig(filename='ingestion_errors.log',
+                    level=logging.WARNING,
+                    format='%(asctime)s - %(levelname)s -%(message)s')
 
 
 class IngestionEngine:
@@ -32,7 +38,7 @@ class IngestionEngine:
                             )
 
                 except Exception as e:
-                    print(f"Ingesting error: {e}")
-                    pass
+                    logging.warning(f"Failed to ingest: {file_path}: {e}")
+                    continue
 
         return all_chunks

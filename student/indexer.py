@@ -54,7 +54,7 @@ class Indexer:
         corpus: List[str] = [self._clean_text(text) for text in raw_corp]
 
         print("Tokenizing corpus...")
-        corpus_tokens = bm25s.tokenize(corpus)
+        corpus_tokens = bm25s.tokenize(corpus, stopwords="en")
         # corpus_tokens is a tuple of (id, token)
         print("Training BM25 Index...")
 
@@ -99,14 +99,14 @@ class Indexer:
 
     def search(self, query: str, k: int = 5) -> List[MinimalSource]:
         """
-        1. Tokenizes the user's query string using bm25s.tokenize.
-        2. Pass those tokens to self.retriever.retrieve(..., k=k).
-        3. Loop through the returned indices to fetch the
-            correct MinimalSource objects from the self.corpus_chunks
+        - Query Encoding
+        - similarity search: Term Frequency-Inverse Document Frequency
+            Ranking: the top k chunks
+        - stop-word = remove noisy sounds
         """
         results: List[MinimalSource] = []
         clean_q = self._clean_text(query)
-        token_q = bm25s.tokenize(clean_q)
+        token_q = bm25s.tokenize(clean_q, stopwords="en")
         # scores = data relevancy (14.344)
         # tiket is phyiscal position in list
         docs, _ = self.retriever.retrieve(token_q, k=k)
