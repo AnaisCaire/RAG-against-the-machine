@@ -1,25 +1,25 @@
-from typing import List
-from transformers import pipeline
+from typing import Any, List
+from transformers import AutoTokenizer, AutoModelForCausalLM
 from student.models import MinimalSource, MinimalAnswer
 import torch
 
 
 class Generator:
     def __init__(self):
-        device = "mps" if torch.backends.mps.is_available() else "cpu"
+        self.device: str = "mps" if torch.backends.mps.is_available() else "cpu"
 
-        if device == "mps":
+        if self.device == "mps":
             print("⚡ Accelerating with Apple Silicon GPU (MPS)")
         else:
             print("🐢 GPU not found. Falling back to CPU (Slow)")
 
-        self.pipeline = pipeline(
-            "text-generation",
-            model="Qwen/Qwen2.5-0.5B-Instruct",
-            device=device,        # <--- THIS IS THE SPEED KEY
-            torch_dtype=torch.float16,  # <--- USES HALF-PRECISION (Faster & Less RAM)
-            batch_size=8
-        )
+        model_name = "Qwen/Qwen3-0.6B"
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model: Any = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.float16,
+        ).to(self.device)
+        self.model.eval()
 
     def _build_prompt(self,
                       query: str,
@@ -33,11 +33,11 @@ class Generator:
 
         # ---- optimisation ----
         # control the token limit for a smaller prompt < 2s.
-        max_content_chars = 4000
+        max_content_chars = 1000
         current_char = 0
 
-        # 1. Loop through the retrieved sources
-        for source in retrieved_sources:
+        # 1. Loop through the retrieved sources (top 3 only)
+        for source in retrieved_sources[:3]:
             try:
                 # 2. Extract the actual text for this source
                 with open(source.file_path, 'r', encoding='utf-8') as f:
@@ -92,20 +92,34 @@ class Generator:
             }
         ]
         # 3. Ask the AI to generate text
-        # We limit the tokens to prevent it from rambling forever
-        ai_output = self.pipeline(
+        # a. render messages to a plain string (thinking disabled)
+        text = self.tokenizer.apply_chat_template(
             messages,
-            max_new_tokens=75,
-            return_full_text=False,
-            truncation=True,  # for GPU mem
-            do_sample=False,  # for faster answer
-            repetition_penalty=1.2,
-            max_length=1024  # Cap the max input math the GPU has to do
+            tokenize=False,
+            add_generation_prompt=True,
+            enable_thinking=False
         )
-        # 4. Extract the raw string from the pipeline output
-        raw_answer_string = ai_output[0]['generated_text'].strip()
+        # b. tokenize the string → BatchEncoding with input_ids + attention_mask
+        inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
+        # c. Generate (no_grad = no memory tracking)
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs,
+                max_new_tokens=80,
+                do_sample=False,
+                pad_token_id=self.tokenizer.eos_token_id
+            )
+        # d. Decode only the newly generated tokens
+        input_length = inputs["input_ids"].shape[1]
+        generated_tokens = outputs[0][input_length:]
+
+        raw_answer_string = self.tokenizer.decode(
+            generated_tokens,
+            skip_special_tokens=True).strip()
+        # Fallback cleanup just in case the model ignores the instruction
         if "</think>" in raw_answer_string:
             raw_answer_string = raw_answer_string.split("</think>")[-1].strip()
+
         # 4. Package everything into the MinimalAnswer Pydantic model
         return MinimalAnswer(
             question_id=question_id,

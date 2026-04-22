@@ -116,7 +116,17 @@ class CodeChunker(BaseChunker):
             else:
                 txt_chunks = TextChunker(self.max_chunk_size)
                 node_content = content[absolute_start:absolute_end]
-                chunks = txt_chunks.chunk(file_path, node_content)
+                relative_chunks = txt_chunks.chunk(file_path, node_content)
+                # TextChunker indices are relative to node_content (starts at 0),
+                # so we shift them back to absolute file positions.
+                chunks = [
+                    MinimalSource(
+                        file_path=c.file_path,
+                        first_character_index=c.first_character_index + absolute_start,
+                        last_character_index=c.last_character_index + absolute_start
+                    )
+                    for c in relative_chunks
+                ]
 
             return chunks
 

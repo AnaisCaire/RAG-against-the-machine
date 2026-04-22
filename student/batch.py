@@ -1,13 +1,14 @@
 import os
 import json
 from student.models import RagDataset, StudentSearchResults, StudentSearchResultsAndAnswer, MinimalSearchResults
+from typing import Optional
 from student.indexer import Indexer
 from student.generator import Generator
 from tqdm import tqdm
 
 
 class BatchProcessor:
-    def __init__(self, search_engine: Indexer, generator=None):
+    def __init__(self, search_engine: Optional[Indexer], generator=None):
         self.search_engine = search_engine
         self.generator = generator
 
@@ -26,7 +27,7 @@ class BatchProcessor:
         # 3. Create an empty list to hold your MinimalSearchResults
         results_list = []
 
-        for q in dataset.rag_questions:
+        for q in tqdm(dataset.rag_questions, desc="Searching dataset"):
             question_id = q.question_id
             question = q.question
             found_sources = self.search_engine.search(query=question, k=k)

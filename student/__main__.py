@@ -1,29 +1,38 @@
 
+import os
 from student.indexer import Indexer
-from student.chunker import CodeChunker, TextChunker
+from student.evaluate import Evaluator
 from student.ingestion import IngestionEngine
 from student.generator import Generator
 from student.batch import BatchProcessor
 import fire
-import pathlib
-import subprocess
 import uuid
-import bm25s
+
 
 class RAGCLI:
     """
     Command line interface for the RAG pipeline
     """
+    def __init__(self):
+        self.evaluator = Evaluator()
 
     def index(self, max_chunk_size: int = 2000):
-        """Index a raw rep and save the BM25 model"""
-        print("Starting indexing process with",
-              f" max_chunk_size={max_chunk_size}...")
-        ingestion = IngestionEngine(max_chunk_size=max_chunk_size)
-        data = ingestion.ingest_directory("data/raw/vllm-0.10.1")
-        indexer = Indexer()
-        indexer.build_index(data)
-        indexer.save_index("data/processes/index_bm25")
+        """Build separate docs and code BM25 indices."""
+        raw_dir = "data/raw/vllm-0.10.1"
+
+        print("=== Building docs index (md/txt) ===")
+        docs_ingestion = IngestionEngine(max_chunk_size=1500)
+        docs_data = docs_ingestion.ingest_docs(raw_dir)
+        docs_indexer = Indexer()
+        docs_indexer.build_index(docs_data)
+        docs_indexer.save_index("data/processes/index_bm25_docs")
+
+        print("=== Building code index (py) ===")
+        code_ingestion = IngestionEngine(max_chunk_size=max_chunk_size)
+        code_data = code_ingestion.ingest_code(raw_dir)
+        code_indexer = Indexer()
+        code_indexer.build_index(code_data)
+        code_indexer.save_index("data/processes/index_bm25_code")
 
     # ==== Retrival Phase ====
 
@@ -32,7 +41,7 @@ class RAGCLI:
 
         print(f"Searching for: '{query}'")
         indexer = Indexer()
-        indexer.load_index("data/processes/index_bm25")
+        indexer.load_index("data/processes/index_bm25_docs")
         found_chunks = indexer.search(query, k)
         print("\n--- Top Results ---")
         for i, chunk in enumerate(found_chunks):
@@ -45,8 +54,15 @@ class RAGCLI:
                        save_directory: str,
                        k: int = 10):
         """ Process a dataset of questions and save the res"""
+        name = os.path.basename(dataset_path)
+        if "docs" in name:
+            index_dir = "data/processes/index_bm25_docs"
+        elif "code" in name:
+            index_dir = "data/processes/index_bm25_code"
+        else:
+            index_dir = "data/processes/index_bm25_docs"
         indexer = Indexer()
-        indexer.load_index("data/processes/index_bm25")
+        indexer.load_index(index_dir)
         batcher = BatchProcessor(search_engine=indexer)
         batcher.search_dataset(dataset_path=dataset_path,
                                save_directory=save_directory,
@@ -90,7 +106,8 @@ class RAGCLI:
 
     def evaluate(self, student_results_path: str, dataset_path: str, k: int = 10, max_context_length: int = 2000):
         """Evaluates student search results against the ground truth using custom Recall@k."""
-       
+        self.evaluator.evaluate(student_results_path, dataset_path,
+                                k, max_context_length)
 
 if __name__ == "__main__":
     fire.Fire(RAGCLI)

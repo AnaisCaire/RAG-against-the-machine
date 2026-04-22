@@ -136,6 +136,8 @@ the last and first index for the chunking.
     2. generate answer:
         we need to use the MinimalAnswer model 
 
+    ok now i have to generate questions in less than 2 seconds... the self.pipeline(..) is not precise enough to change somme settings needed for optimisation.
+
 ## batch 
 
     we need to read the Json files.
@@ -143,3 +145,13 @@ the last and first index for the chunking.
     - search_dataset (Chapter V.6.5): Reads the UnansweredQuestions JSON, searches the index, and saves a StudentSearchResults JSON.
 
     - answer_dataset (Chapter V.6.7): Reads the newly created StudentSearchResults JSON, passes those pre-found tickets to the LLM, and saves a StudentSearchResultsAndAnswer JSON.
+
+
+## accuracy problems
+
+### biggest one:
+    Python chunks: 107,698  (98.4%)
+    Doc chunks:       1,773  (1.6%)
+For any docs question, your index is nearly 99% noise. BM25 has 60× more Python chunks to pick from than docs chunks, so it almost always returns code files first. This accounts for 24 of your 35 failing questions.
+
+You can see it in the output — queries like "What hardware platforms does vLLM support?" return Python test files instead of the relevant .md file.

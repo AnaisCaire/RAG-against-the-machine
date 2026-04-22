@@ -1,75 +1,92 @@
-    
+import json
 
 
+class Evaluator:
+    """
+    Handles the mathematical evaluation of student search
+    results against ground truth data.
+    """
 
-def evaluate_answer(self, student_results_path: str, dataset_path: str, k: int = 10, max_context_length: int = 2000):
-    """Evaluates student search results against the ground truth using custom Recall@k."""
-    import json
-    
-    print("--- Running Custom Recall@k Evaluation ---")
-    
-    # 1. Load the JSON data
-    with open(student_results_path, 'r') as f:
-        student_data = json.load(f)
-    with open(dataset_path, 'r') as f:
-        ground_truth_data = json.load(f)
+    def evaluate(self, student_results_path: str, dataset_path: str,
+                 k: int = 10, max_context_length: int = 2000) -> None:
+        """
+        Evaluates student search results against the ground
+        truth using Recall@k.
+        """
+        print(f"--- Running Custom Recall@{k} Evaluation ---")
 
-    # 2. Map ground truth sources by question_id for quick lookup
-    truth_map = {q['question_id']: q['sources'] for q in ground_truth_data['rag_questions']}
+        # 1. Load the JSON data
+        try:
+            with open(student_results_path, 'r', encoding='utf-8') as f:
+                student_data = json.load(f)
+            with open(dataset_path, 'r', encoding='utf-8') as f:
+                ground_truth_data = json.load(f)
+        except FileNotFoundError as e:
+            print(f"❌ Error loading files: {e}")
+            return
 
-    total_recall = 0.0
-    num_questions = len(student_data['search_results'])
+        # 2. Map ground truth sources by question_id for quick lookup
+        truth_map = {q['question_id']: q['sources'] for q in ground_truth_data['rag_questions']}
 
-    # 3. Calculate Recall@k for every question
-    for result in student_data['search_results']:
-        q_id = result['question_id']
-        # Slice the predicted list to ensure we only look at top 'k'
-        pred_sources = result['retrieved_sources'][:k] 
-        expected_sources = truth_map.get(q_id, [])
+        total_recall = 0.0
+        num_questions = len(student_data['search_results'])
 
-        if not expected_sources:
-            continue
+        # 3. Calculate Recall@k for every question
+        for result in student_data['search_results']:
+            q_id = result['question_id']
+            # Slice the predicted list to ensure we only look at top 'k'
+            pred_sources = result['retrieved_sources'][:k] 
+            expected_sources = truth_map.get(q_id, [])
 
-        found_count = 0
-        # For every correct source, check if we found it
-        for exp in expected_sources:
-            exp_len = exp['last_character_index'] - exp['first_character_index']
-            is_found = False
+            if not expected_sources:
+                continue
 
-            for pred in pred_sources:
-                # Must be the exact same file
-                if exp['file_path'] == pred['file_path']:
-                    # Calculate mathematical overlap
-                    overlap_start = max(exp['first_character_index'], pred['first_character_index'])
-                    overlap_end = min(exp['last_character_index'], pred['last_character_index'])
-                    overlap_len = max(0, overlap_end - overlap_start)
+            found_count = 0
 
-                    # Check if it meets the 5% threshold mandated by the subject
-                    if (overlap_len / exp_len) >= 0.05:
-                        is_found = True
-                        break 
+            # For every correct source, check if we found it
+            for exp in expected_sources:
+                is_found = False
 
-            if is_found:
-                found_count += 1
+                for pred in pred_sources:
+                    # Must be the exact same file
+                    if exp['file_path'] == pred['file_path']:
 
-        # Question Recall = (Sources Found / Total Expected Sources)
-        question_recall = found_count / len(expected_sources)
-        total_recall += question_recall
+                        # 1. Calculate Intersection (Overlap)
+                        overlap_start = max(exp['first_character_index'], pred['first_character_index'])
+                        overlap_end = min(exp['last_character_index'], pred['last_character_index'])
+                        overlap_len = max(0, overlap_end - overlap_start)
 
-    # 4. Final System Score
-    final_recall = total_recall / num_questions
+                        # 2. Calculate expected source length
+                        exp_len = exp['last_character_index'] - exp['first_character_index']
 
-    print(f"Questions evaluated: {num_questions}")
-    print(f"Recall@{k}: {final_recall:.3f}")
+                        # 3. Check against the 5% overlap threshold
+                        # (overlap relative to expected source length, as per subject)
+                        overlap_ratio = overlap_len / exp_len if exp_len > 0 else 0.0
+                        if overlap_ratio >= 0.05:
+                            is_found = True
+                            break
 
-    # Dynamically check the threshold based on the filename
-    if "docs" in dataset_path:
-        if final_recall >= 0.80:
-            print("✅ PASS! You achieved >= 80% on the docs dataset.")
-        else:
-            print("❌ FAIL. You are below the 80% docs threshold.")
-    elif "code" in dataset_path:
-        if final_recall >= 0.50:
-            print("✅ PASS! You achieved >= 50% on the code dataset.")
-        else:
-            print("❌ FAIL. You are below the 50% code threshold.")
+                if is_found:
+                    found_count += 1
+
+            # Question Recall = (Sources Found / Total Expected Sources)
+            question_recall = found_count / len(expected_sources)
+            total_recall += question_recall
+
+        # 4. Final System Score
+        final_recall = total_recall / num_questions
+
+        print(f"Questions evaluated: {num_questions}")
+        print(f"Recall@{k}: {final_recall:.3f}")
+
+        # Dynamically check the threshold based on the filename
+        if "docs" in dataset_path:
+            if final_recall >= 0.80:
+                print("✅ PASS! You achieved >= 80% on the docs dataset.")
+            else:
+                print("❌ FAIL. You are below the 80% docs threshold.")
+        elif "code" in dataset_path:
+            if final_recall >= 0.50:
+                print("✅ PASS! You achieved >= 50% on the code dataset.")
+            else:
+                print("❌ FAIL. You are below the 50% code threshold.")
