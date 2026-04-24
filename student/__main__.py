@@ -24,14 +24,17 @@ class RAGCLI:
         docs_ingestion = IngestionEngine(max_chunk_size=1500)
         docs_data = docs_ingestion.ingest_docs(raw_dir)
         docs_indexer = Indexer()
-        docs_indexer.build_index(docs_data)
+        docs_indexer.build_index(docs_data, is_code=False)
         docs_indexer.save_index("data/processes/index_bm25_docs")
 
         print("=== Building code index (py) ===")
         code_ingestion = IngestionEngine(max_chunk_size=max_chunk_size)
         code_data = code_ingestion.ingest_code(raw_dir)
+        code_data = [c for c in code_data if '/tests/' not in c.file_path
+            and '/benchmarks/' not in c.file_path
+            and '/examples/' not in c.file_path]
         code_indexer = Indexer()
-        code_indexer.build_index(code_data)
+        code_indexer.build_index(code_data, is_code=True)
         code_indexer.save_index("data/processes/index_bm25_code")
 
     # ==== Retrival Phase ====
@@ -41,7 +44,7 @@ class RAGCLI:
 
         print(f"Searching for: '{query}'")
         indexer = Indexer()
-        indexer.load_index("data/processes/index_bm25_docs")
+        indexer.load_index("data/processes/index_bm25_docs", is_code=False)
         found_chunks = indexer.search(query, k)
         print("\n--- Top Results ---")
         for i, chunk in enumerate(found_chunks):
@@ -55,14 +58,14 @@ class RAGCLI:
                        k: int = 10):
         """ Process a dataset of questions and save the res"""
         name = os.path.basename(dataset_path)
-        if "docs" in name:
-            index_dir = "data/processes/index_bm25_docs"
-        elif "code" in name:
+        if "code" in name:
             index_dir = "data/processes/index_bm25_code"
+            is_code = True
         else:
             index_dir = "data/processes/index_bm25_docs"
+            is_code = False
         indexer = Indexer()
-        indexer.load_index(index_dir)
+        indexer.load_index(index_dir, is_code=is_code)
         batcher = BatchProcessor(search_engine=indexer)
         batcher.search_dataset(dataset_path=dataset_path,
                                save_directory=save_directory,
@@ -75,7 +78,7 @@ class RAGCLI:
         print(f"Answering query: '{query}'")
         # 1. Search
         indexer = Indexer()
-        indexer.load_index("data/processes/index_bm25")
+        indexer.load_index("data/processes/index_bm25", is_code=False)
         found_chunks = indexer.search(query, k)
 
         # 2. Generate

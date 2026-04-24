@@ -9,6 +9,7 @@ from student.models import MinimalSource
 class Indexer:
     def __init__(self):
         self.corpus_chunks: List[MinimalSource] = []
+        self.is_code: bool = False
         # Analogy: spawning the Librarian
         self.retriever = bm25s.BM25()
 
@@ -40,21 +41,28 @@ class Indexer:
 
     def _clean_text(self, text: str) -> str:
         """ Normalize the syntax for better BM25 matching"""
+        import re
+        text = re.sub(r'(?<=[a-z0-9])(?=[A-Z])', ' ', text)
         cleaned = text.replace("_", " ").replace(".", " ")
         return cleaned.lower()
 
-    def build_index(self, chunks: List[MinimalSource]) -> None:
+    def build_index(self,
+                    chunks: List[MinimalSource],
+                    is_code: bool) -> None:
         """
         Extracts text, tokenizes it, and builds the BM25 index.
         """
         self.corpus_chunks = chunks
+        self.is_code = is_code
 
         print("Extracting corpus from chunks...")
         raw_corp: List[str] = self._make_corpus(chunks)
         corpus: List[str] = [self._clean_text(text) for text in raw_corp]
-
         print("Tokenizing corpus...")
-        corpus_tokens = bm25s.tokenize(corpus, stopwords="en")
+        if is_code:
+            corpus_tokens = bm25s.tokenize(corpus, stopwords=[])
+        else:
+            corpus_tokens = bm25s.tokenize(corpus, stopwords="en")
         # corpus_tokens is a tuple of (id, token)
         print("Training BM25 Index...")
 
@@ -77,11 +85,12 @@ class Indexer:
             json.dump(stand_chunks, file)
         print("Save complete!")
 
-    def load_index(self, load_dir: str) -> None:
+    def load_index(self, load_dir: str, is_code: bool) -> None:
         """
         Loads the BM25 model and the chunk metadata from disk.
         opposite of save_index
         """
+        self.is_code = is_code
         print(f"Loading index from {load_dir}...")
 
         # 1. Load the math model
@@ -106,7 +115,8 @@ class Indexer:
         """
         results: List[MinimalSource] = []
         clean_q = self._clean_text(query)
-        token_q = bm25s.tokenize(clean_q, stopwords="en")
+        stopwords = [] if self.is_code else "en"
+        token_q = bm25s.tokenize(clean_q, stopwords=stopwords)
         # scores = data relevancy (14.344)
         # tiket is phyiscal position in list
         docs, _ = self.retriever.retrieve(token_q, k=k)

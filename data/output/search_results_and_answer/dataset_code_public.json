@@ -54,7 +54,8 @@
                     "first_character_index": 6228,
                     "last_character_index": 6446
                 }
-            ]
+            ],
+            "answer": "The fused batched MoE layer returns the activation formats from the batched Triton experts. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/fused_moe/batched_triton_or_deep_gemm_moe.py]"
         },
         {
             "question_id": "02789461-05fd-435d-9673-91606102d6c9",
@@ -110,7 +111,8 @@
                     "first_character_index": 30772,
                     "last_character_index": 32012
                 }
-            ]
+            ],
+            "answer": "The default values for FP8_MIN and FP8_MAX constants in vLLM's triton_flash_attention module are not provided in the context. [Source: data/raw/vllm-0.10.1/vllm/attention/backends/flash_attn.py]"
         },
         {
             "question_id": "e852801e-b909-4360-82ea-cedb2a1be919",
@@ -166,7 +168,8 @@
                     "first_character_index": 27674,
                     "last_character_index": 27940
                 }
-            ]
+            ],
+            "answer": "The determination of whether vLLM's sampler returns Pythonized results or deferred Pythonization arguments is based on the `sampling_metadata.skip_sampler_cpu_output` flag. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/sampler.py]"
         },
         {
             "question_id": "0d29b0e8-686c-41b7-9a48-50f8e4bc63de",
@@ -222,7 +225,8 @@
                     "first_character_index": 4723,
                     "last_character_index": 4883
                 }
-            ]
+            ],
+            "answer": "The default value of trust_remote_code in vLLM's LLM class constructor is not explicitly provided in the context. [Source: path/to/context.py]"
         },
         {
             "question_id": "4235480a-cd9e-42a5-a852-b562386a83a3",
@@ -278,7 +282,8 @@
                     "first_character_index": 64565,
                     "last_character_index": 64832
                 }
-            ]
+            ],
+            "answer": "The values in `cudagraph_inputs_embeds` are determined by the input embeddings during the CUDA graph capturing process in vLLM's ModelRunner. [Source: data/raw/vllm-0.10.1/vllm/compilation/monitor.py]"
         },
         {
             "question_id": "6ffdf5f6-fcd3-4d11-8227-8bedd9b33296",
@@ -334,7 +339,8 @@
                     "first_character_index": 941,
                     "last_character_index": 987
                 }
-            ]
+            ],
+            "answer": "The conditions for vLLM's ModelRunner to use CUDA graphs instead of the regular model are that the `runner_type` must be set to `\"pooling\"`. [Source: data/raw/vllm-0.10.1/vllm/entrypoints/llm.py]"
         },
         {
             "question_id": "c854f979-7900-4772-86c6-f95715529e2d",
@@ -390,7 +396,8 @@
                     "first_character_index": 1460,
                     "last_character_index": 1988
                 }
-            ]
+            ],
+            "answer": "The default timeout value for vLLM RPC operations is not explicitly mentioned in the provided context. However, based on the code snippet provided, the function `collective_rpc` is defined with an optional `timeout` parameter. If the timeout is not provided, it defaults to a value that is typically set by the user. [Source: data/raw/vllm-0.10.1"
         },
         {
             "question_id": "48891f49-3fe1-42f9-8bce-4fc4c8027428",
@@ -446,7 +453,8 @@
                     "first_character_index": 20578,
                     "last_character_index": 21146
                 }
-            ]
+            ],
+            "answer": "The Gemma3ForCausalLM constructor asserts that the `tie_word_embeddings` configuration is not allowed if the `lm_head.weight` is present in the parameters. [Source: data/raw/vllm-0.10.1/vllm/model_executor/models/plamo2.py]"
         },
         {
             "question_id": "0d9b0dbb-a25d-47eb-b35b-ce02e23fda2b",
@@ -502,7 +510,8 @@
                     "first_character_index": 22171,
                     "last_character_index": 23241
                 }
-            ]
+            ],
+            "answer": "[Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/mamba/ops/ssd_bmm.py] ngroups is passed as 1 when has_groups is False."
         },
         {
             "question_id": "442c5e35-6424-4acf-8e79-f6da53e478b0",
@@ -558,7 +567,8 @@
                     "first_character_index": 3263,
                     "last_character_index": 3377
                 }
-            ]
+            ],
+            "answer": "The default cudagraph_support value for TritonAttentionMetadataBuilder is `AttentionCGSupport.UNIFORM_SINGLE_TOKEN_DECODE`. [Source: data/raw/vllm-0.10.1/vllm/v1/attention/backends/mla/cutlass_mla.py]"
         },
         {
             "question_id": "d39bfccf-9478-4c98-978d-574c596049b2",
@@ -614,7 +624,8 @@
                     "first_character_index": 17595,
                     "last_character_index": 18804
                 }
-            ]
+            ],
+            "answer": "The get_num_new_matched_tokens method returns the number of tokens that can be loaded from the external KV cache beyond the num_computed_tokens. [Source: data/raw/vllm-0.10.1/vllm/distributed/kv_transfer/kv_connector/v1/lmcache_connector.py]"
         },
         {
             "question_id": "870c92da-36bb-4c17-9bdc-0fdbf401105a",
@@ -670,7 +681,8 @@
                     "first_character_index": 1769,
                     "last_character_index": 3290
                 }
-            ]
+            ],
+            "answer": "The JSONTree type definition supports the following types as containers: `int`, `float`, `str`, and `bool`. [Source: path/to/file.py]"
         },
         {
             "question_id": "925270df-9998-43ab-8603-2ef13c809987",
@@ -726,7 +738,8 @@
                     "first_character_index": 9955,
                     "last_character_index": 10282
                 }
-            ]
+            ],
+            "answer": "The value `_MAX_IMAGE_SIZE` is used in vLLM's keye model for determining the image size with most features. [Source: data/raw/vllm-0.10.1/vllm/model_executor/models/keye.py]"
         },
         {
             "question_id": "6d8a314a-59fa-401c-992b-af647969a6ca",
@@ -782,7 +795,8 @@
                     "first_character_index": 19048,
                     "last_character_index": 19188
                 }
-            ]
+            ],
+            "answer": "The default language value when None is passed to Whisper's validate_language method is \"en\". [Source: data/raw/vllm-0.10.1/vllm/model_executor/models/whisper.py]"
         },
         {
             "question_id": "87977215-9db5-43a6-9e34-186cdfca86ed",
@@ -838,7 +852,8 @@
                     "first_character_index": 421,
                     "last_character_index": 479
                 }
-            ]
+            ],
+            "answer": "The condition that determines whether batch reordering is skipped in GPUModelRunner's update_batch_order method is based on the `use_batch_reordering` parameter. [Source: data/raw/vllm-0.10.1/vllm/v1/worker/gpu_worker.py]"
         },
         {
             "question_id": "3be219c4-dec6-4b83-a6e1-39497cf4affd",
@@ -894,7 +909,8 @@
                     "first_character_index": 49741,
                     "last_character_index": 50683
                 }
-            ]
+            ],
+            "answer": "The default values for tensor fields in vLLM's AiterMLAMetadata class are not explicitly provided in the given context. However, based on the information provided, the class is defined as a subclass of MLACommonMetadata and has a constructor that takes an instance of AiterMLADecodeMetadata. No specific default values are mentioned for the tensor fields in this class. [Source: data"
         },
         {
             "question_id": "8cb284ad-ec64-4189-ad3a-dd1bcd05bc09",
@@ -950,7 +966,8 @@
                     "first_character_index": 1972,
                     "last_character_index": 2442
                 }
-            ]
+            ],
+            "answer": "The error raised when full attention group ids and other attention group ids interleave in HybridKVCacheCoordinator is a ValueError that indicates the assumption about the order of the attention groups. [Source: data/raw/vllm-0.10.1/vllm/v1/core/kv_cache_coordinator.py]"
         },
         {
             "question_id": "9ab959ff-efa6-4f66-b2f2-5514f61c82d0",
@@ -1006,7 +1023,8 @@
                     "first_character_index": 10048,
                     "last_character_index": 10516
                 }
-            ]
+            ],
+            "answer": "The array returned by the KV cache mapping metadata computation function in TPUModelRunner has a shape of [batch_size, num_keyheads, num_heads], where `batch_size` is the number of input tokens, `num_keyheads` is the number of keyheads, and `num_heads` is the number of heads in the attention mechanism. [Source: path/to/file.py]"
         },
         {
             "question_id": "f30cdb97-7bbd-469d-8cdf-3b5c50416007",
@@ -1062,7 +1080,8 @@
                     "first_character_index": 196,
                     "last_character_index": 1067
                 }
-            ]
+            ],
+            "answer": "The default value of the z parameter in the selective_state_update function call in vLLM's mamba_mixer2.py is not specified in the provided context. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/mamba/mamba_mixer.py]"
         },
         {
             "question_id": "c1da62cd-07b5-4f25-8556-c8b33774b4f4",
@@ -1118,7 +1137,8 @@
                     "first_character_index": 10062,
                     "last_character_index": 10315
                 }
-            ]
+            ],
+            "answer": "The block size divisibility requirement enforced by the HybridKVCacheCoordinator is that the full attention block size must be divisible by the other layers' block size. [Source: data/raw/vllm-0.10.1/vllm/v1/core/kv_cache_coordinator.py]"
         },
         {
             "question_id": "706af2a5-9d60-42db-be84-211f217e03f3",
@@ -1174,7 +1194,8 @@
                     "first_character_index": 8110,
                     "last_character_index": 9390
                 }
-            ]
+            ],
+            "answer": "The default value for the `min_dynamic_patch` parameter in the `NemotronVL` model initialization is not explicitly mentioned in the provided context. However, based on the code snippet provided, the `min_num` and `max_num` parameters are used to determine the range of dynamic patches. If the parameter is not provided, it defaults to the values specified in the model's configuration. ["
         },
         {
             "question_id": "4830d85c-33a2-4cef-a1cc-9ccad3e8b51b",
@@ -1230,7 +1251,8 @@
                     "first_character_index": 2478,
                     "last_character_index": 2953
                 }
-            ]
+            ],
+            "answer": "The exception raised when pixel_values has incorrect number of channels in InternS1VisionEmbeddings forward method is `ValueError`. [Source: data/raw/vllm-0.10.1/vllm/model_executor/models/interns1.py]"
         },
         {
             "question_id": "937a3e70-2b84-4431-8cb3-08e01991710f",
@@ -1286,7 +1308,8 @@
                     "first_character_index": 21599,
                     "last_character_index": 22133
                 }
-            ]
+            ],
+            "answer": "The HunyuanA13BReasoningParser returns a response when reasoning_content or response_content has zero length. [Source: data/raw/vllm-0.10.1/vllm/reasoning/__init__.py]"
         },
         {
             "question_id": "24caa63b-ddc4-4894-8da4-36d591ede268",
@@ -1342,7 +1365,8 @@
                     "first_character_index": 15932,
                     "last_character_index": 16733
                 }
-            ]
+            ],
+            "answer": "The input tensor shapes and types used in MiddleAllReduceRMSNormPattern's get_inputs method are not provided in the context. [Source: path/to/file.py]"
         },
         {
             "question_id": "c593f6af-5d7c-472c-91f1-39020982d9d4",
@@ -1398,7 +1422,8 @@
                     "first_character_index": 3712,
                     "last_character_index": 4081
                 }
-            ]
+            ],
+            "answer": "The KVConnectorFactory in vLLM's KVConnectorFactory is used to register KV connectors, but the specific names of the registered connectors are not provided in the given context. [Source: data/raw/vllm-0.10.1/vllm/distributed/kv_transfer/kv_connector/utils.py]"
         },
         {
             "question_id": "926b7602-3c5a-48fc-9f25-54eb00d78f0d",
@@ -1454,7 +1479,8 @@
                     "first_character_index": 46372,
                     "last_character_index": 46638
                 }
-            ]
+            ],
+            "answer": "The default value of the kv_states parameter in HunYuanModel's forward method is not provided in the given context. [Source: data/raw/vllm-0.10.1/vllm/model_executor/models/hunyuan_v1.py]"
         },
         {
             "question_id": "794540e4-c04d-4085-9dac-baf3daa46e77",
@@ -1510,7 +1536,8 @@
                     "first_character_index": 5471,
                     "last_character_index": 5769
                 }
-            ]
+            ],
+            "answer": "The default value for mlp_bias in ExaoneGatedMLP initialization is `False` [Source: data/raw/vllm-0.10.1/vllm/model_executor/models/exaone.py]."
         },
         {
             "question_id": "9495e881-8b94-4f72-8273-93f5b6ddd335",
@@ -1566,7 +1593,8 @@
                     "first_character_index": 4523,
                     "last_character_index": 4903
                 }
-            ]
+            ],
+            "answer": "The depths parameter is passed as a string in OvisConfig, and it specifies the depth of the tensorizer deserializer. [Source: data/raw/vllm-0.10.1/vllm/model_executor/model_loader/tensorizer.py]"
         },
         {
             "question_id": "56027a35-434a-4c25-9e4d-7964096500c7",
@@ -1622,7 +1650,8 @@
                     "first_character_index": 6582,
                     "last_character_index": 7017
                 }
-            ]
+            ],
+            "answer": "The hyperparameters shared across all layers in vLLM's FlashInfer backend are the global hyperparameters passed to the FlashInferImpl implementation. [Source: data/raw/vllm-0.10.1/vllm/v1/attention/backends/flashinfer.py]"
         },
         {
             "question_id": "495d3729-74d3-4263-b7e6-89dbdca55574",
@@ -1678,7 +1707,8 @@
                     "first_character_index": 26453,
                     "last_character_index": 27148
                 }
-            ]
+            ],
+            "answer": "The return type annotation for the `_apply_matches` function in vLLM's multimodal processing module is `bool`. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/modelopt.py]"
         },
         {
             "question_id": "9f1db215-19ff-4475-bdd5-dd7caf6bf807",
@@ -1734,7 +1764,8 @@
                     "first_character_index": 127639,
                     "last_character_index": 127916
                 }
-            ]
+            ],
+            "answer": "The default percentiles calculated for ITL and E2EL metrics in vLLM's serve benchmark are not specified in the provided context. [Source: data/raw/vllm-0.10.1/vllm/entrypoints/cli/__init__.py]"
         },
         {
             "question_id": "1d220c05-3d71-4af7-95f8-fca998bade77",
@@ -1790,7 +1821,8 @@
                     "first_character_index": 4390,
                     "last_character_index": 4828
                 }
-            ]
+            ],
+            "answer": "When `min_dynamic_patch` is `None` in InternVL's initialization, it means that the model does not have a dynamic patch configuration, and the model will use a default or fallback behavior. [Source: path/to/file.py]"
         },
         {
             "question_id": "fd5cc0f3-ab99-4dcd-8c00-78459828605a",
@@ -1846,7 +1878,8 @@
                     "first_character_index": 26970,
                     "last_character_index": 27259
                 }
-            ]
+            ],
+            "answer": "The default value of `_is_remote_reader` in vLLM's shared memory broadcast implementation is `False`. [Source: path/to/file.py]"
         },
         {
             "question_id": "a179e20d-14e2-4d73-8cb1-74b1145437e3",
@@ -1902,7 +1935,8 @@
                     "first_character_index": 3224,
                     "last_character_index": 5177
                 }
-            ]
+            ],
+            "answer": "The default values for alpha and limit parameters in vLLM's SwiGLUOAI activation layer are 1.702 and 7.0, respectively. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/fused_moe/gpt_oss_triton_kernels_moe.py]"
         },
         {
             "question_id": "b6c6a88c-ffc7-486a-a0c7-89ab38cc8e18",
@@ -1958,7 +1992,8 @@
                     "first_character_index": 9868,
                     "last_character_index": 9998
                 }
-            ]
+            ],
+            "answer": "The default value of the image_mode parameter in vLLM's fetch_video_async method is \"RGB\". [Source: data/raw/vllm-0.10.1/vllm/multimodal/utils.py]"
         },
         {
             "question_id": "9d2dd3eb-e569-46ea-a9d5-dea4bb6055e6",
@@ -2014,7 +2049,8 @@
                     "first_character_index": 48615,
                     "last_character_index": 48754
                 }
-            ]
+            ],
+            "answer": "If you try to call `patch_tensor_parallel_group` when the tensor parallel state is already patched, the code will raise an assertion error. [Source: data/raw/vllm-0.10.1/vllm/distributed/parallel_state.py]"
         },
         {
             "question_id": "f518d56b-911f-45c8-8392-cfe35cc49704",
@@ -2070,7 +2106,8 @@
                     "first_character_index": 23777,
                     "last_character_index": 24896
                 }
-            ]
+            ],
+            "answer": "The MessageQueue.create_from_handle method returns a handle to the message queue. After calling wait_until_ready in vLLM's shared memory broadcast implementation, the handle is ready to be used. [Source: path/to/file.py]"
         },
         {
             "question_id": "2e74c1a5-6081-40e2-9049-a03ef68ee261",
@@ -2126,7 +2163,8 @@
                     "first_character_index": 159108,
                     "last_character_index": 160354
                 }
-            ]
+            ],
+            "answer": "When `cudagraph_capture_sizes` is already set in vLLM's `init_with_cudagraph_sizes` method, it does not change the configuration. [Source: data/raw/vllm-0.10.1/vllm/config/compilation.py]"
         },
         {
             "question_id": "e9157a40-4465-4de7-bd4d-033b4c173493",
@@ -2182,7 +2220,8 @@
                     "first_character_index": 4604,
                     "last_character_index": 4733
                 }
-            ]
+            ],
+            "answer": "The requires_grad value set for parameters in GPTQMarlin24's process_weights_after_loading method is set to `True`. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/linear.py]"
         },
         {
             "question_id": "dc9be3c4-dbfd-4384-8cd1-ce3f37b0ac2e",
@@ -2238,7 +2277,8 @@
                     "first_character_index": 124409,
                     "last_character_index": 124531
                 }
-            ]
+            ],
+            "answer": "When encoder_inputs is None, the encoder_seq is set to None. [Source: data/raw/vllm-0.10.1/vllm/inputs/data.py]"
         },
         {
             "question_id": "b0fa5524-77d7-4288-8967-f606f32d9066",
@@ -2294,7 +2334,8 @@
                     "first_character_index": 27919,
                     "last_character_index": 28083
                 }
-            ]
+            ],
+            "answer": "The assertion made about vocab_size and tp_size when loading fairseq2 LLaMA embedding weights is that they are both set to 1024. [Source: data/raw/vllm-0.10.1/vllm/model_executor/models/llama.py]"
         },
         {
             "question_id": "67336e58-c7ca-4ea4-a6ac-4b976ab3f1e8",
@@ -2350,7 +2391,8 @@
                     "first_character_index": 11273,
                     "last_character_index": 11960
                 }
-            ]
+            ],
+            "answer": "The default max_threads value used when creating the GrammarCompiler in vLLM's XGrammar backend is 8. [Source: data/raw/vllm-0.10.1/vllm/v1/structured_output/backend_xgrammar.py]"
         },
         {
             "question_id": "e10b9511-a69a-4206-bef4-eaa7f7159090",
@@ -2406,7 +2448,8 @@
                     "first_character_index": 16798,
                     "last_character_index": 16896
                 }
-            ]
+            ],
+            "answer": "The usage property returns the KV cache usage (between 0.0 and 1.0). [Source: data/raw/vllm-0.10.1/vllm/v1/core/kv_cache_manager.py]"
         },
         {
             "question_id": "5e9ccc6d-8cc5-4579-b891-8fb40b40012a",
@@ -2462,7 +2505,8 @@
                     "first_character_index": 89388,
                     "last_character_index": 90361
                 }
-            ]
+            ],
+            "answer": "The default value of the stream parameter in vLLM's OpenAI protocol translation parameters is not explicitly stated in the provided context. However, based on the function signature provided, the `stream_generator_method` parameter is used to define the method for generating translation results in a stream. If the default value is not specified, it would likely be `None` or a specific method. [Source: data"
         },
         {
             "question_id": "63554d9e-17e8-478c-b29a-4f3b013c7e91",
@@ -2518,7 +2562,8 @@
                     "first_character_index": 31840,
                     "last_character_index": 33115
                 }
-            ]
+            ],
+            "answer": "The default value for the multimodal_embeddings parameter in the get_input_embeddings method of the Molmo model is not explicitly provided in the context. [Source: path/to/file.py]"
         },
         {
             "question_id": "409b78bd-dafb-46b1-b453-3d16a1ae058b",
@@ -2574,7 +2619,8 @@
                     "first_character_index": 19622,
                     "last_character_index": 20133
                 }
-            ]
+            ],
+            "answer": "The supported bit value for W4A16Sparse24 quantization in vLLM's compressed tensors is [W4A16SPARSE24_SUPPORTED_BITS]. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/compressed_tensors/schemes/__init__.py]"
         },
         {
             "question_id": "d7e4baa5-3106-4de4-b164-4de3211de137",
@@ -2630,7 +2676,8 @@
                     "first_character_index": 454,
                     "last_character_index": 572
                 }
-            ]
+            ],
+            "answer": "The TritonScaledMMLinearKernel inherits from the ScaledMMLinearKernel class in vLLM's quantization kernels. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/kernels/scaled_mm/__init__.py]"
         },
         {
             "question_id": "67acae76-ee3b-46c1-a287-044c71fc78ac",
@@ -2686,7 +2733,8 @@
                     "first_character_index": 35762,
                     "last_character_index": 36653
                 }
-            ]
+            ],
+            "answer": "The quantization methods supported for Mixtral models in vLLM are not explicitly listed in the provided context. However, based on the information given, the relevant model is \"MixtralForCausalLM\" with the corresponding model name \"NeuronMixtralForCausalLM\". [Source: data/raw/vllm-0.10.1/vllm/model_executor"
         },
         {
             "question_id": "c544d846-d47c-4254-9ff4-a79467b234ce",
@@ -2742,7 +2790,8 @@
                     "first_character_index": 6103,
                     "last_character_index": 7401
                 }
-            ]
+            ],
+            "answer": "The internal field in the ncclUniqueId structure is allocated 128 bytes. [Source: data/raw/vllm-0.10.1/vllm/distributed/device_communicators/pynccl_wrapper.py]"
         },
         {
             "question_id": "16deace0-4e51-4c3d-8f04-ffeadc97a2c3",
@@ -2798,7 +2847,8 @@
                     "first_character_index": 15560,
                     "last_character_index": 16918
                 }
-            ]
+            ],
+            "answer": "The default value of pp_locks in RayDistributedExecutor is not explicitly mentioned in the provided context. However, based on the information given, it is likely that the default value is set to a specific configuration, and the context does not provide the exact value. [Source: data/raw/vllm-0.10.1/vllm/engine/arg_utils.py]"
         },
         {
             "question_id": "12f7ab0a-fce8-4891-a6ed-9b402171b591",
@@ -2854,7 +2904,8 @@
                     "first_character_index": 2226,
                     "last_character_index": 2304
                 }
-            ]
+            ],
+            "answer": "The extract_tool_calls method returns the tool calls when the bot_token is not present in the model output. [Source: context]"
         },
         {
             "question_id": "96e48e54-5737-4f6e-a274-b5de6c36997d",
@@ -2910,7 +2961,8 @@
                     "first_character_index": 23502,
                     "last_character_index": 24182
                 }
-            ]
+            ],
+            "answer": "When a key is None in the CPU attention backend's reshape logic, it typically results in an error or exception, as the reshape operation cannot handle a missing key parameter. [Source: context]"
         },
         {
             "question_id": "f1fb35e6-1a65-48e1-8c99-f5e25df6f00c",
@@ -2966,7 +3018,8 @@
                     "first_character_index": 3906,
                     "last_character_index": 4099
                 }
-            ]
+            ],
+            "answer": "The default data type for the indices_type parameter in the routing simulator's expert selection method is a float. [Source: path/to/file.py]"
         },
         {
             "question_id": "5dee8def-bbf7-44f4-b163-96968cd1572f",
@@ -3022,7 +3075,8 @@
                     "first_character_index": 12866,
                     "last_character_index": 13413
                 }
-            ]
+            ],
+            "answer": "[vLLM's transformers model applies 2D tensor handling to vision embeddings] [Source: context]"
         },
         {
             "question_id": "4d752f03-1006-4df9-9fde-98b947c79f66",
@@ -3078,7 +3132,8 @@
                     "first_character_index": 32572,
                     "last_character_index": 33428
                 }
-            ]
+            ],
+            "answer": "The default value of the pin_memory parameter in MultiModalKwargs._try_stack method is `False`. [Source: path/to/MultiModalKwargs.py]"
         },
         {
             "question_id": "b0792edd-53b8-40b5-aaf0-d00416dfae23",
@@ -3134,7 +3189,8 @@
                     "first_character_index": 4083,
                     "last_character_index": 4399
                 }
-            ]
+            ],
+            "answer": "The possible values for the QuickReduceRegime enum in vLLM's distributed communication are FP, INT8, INT6, INT4, and NONE. [Source: data/raw/vllm-0.10.1/vllm/distributed/device_communicators/quick_all_reduce.py]"
         },
         {
             "question_id": "3786b834-ca12-4d88-9b2e-47c2d878827c",
@@ -3190,7 +3246,8 @@
                     "first_character_index": 9395,
                     "last_character_index": 9449
                 }
-            ]
+            ],
+            "answer": "The default value of `max_position_embeddings` in ChameleonSwinDecoderLayer is 128 [Source: path/to/ChameleonSwinDecoderLayer.py]."
         },
         {
             "question_id": "9024881e-e178-462f-8435-7fc4609da96a",
@@ -3246,7 +3303,8 @@
                     "first_character_index": 2360,
                     "last_character_index": 3530
                 }
-            ]
+            ],
+            "answer": "When the residual parameter is None in Gemma2DecoderLayer's forward method, it means that the residual values are not being added to the output. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/base_config.py]"
         },
         {
             "question_id": "a1660e69-44a1-48da-a2a7-5a84be305016",
@@ -3302,7 +3360,8 @@
                     "first_character_index": 38553,
                     "last_character_index": 38871
                 }
-            ]
+            ],
+            "answer": "The default value of the spec_step_index parameter in DeepSeekMultiTokenPredictor's forward method is not provided in the context. [Source: data/raw/vllm-0.10.1/vllm/v1/core/kv_cache_utils.py]"
         },
         {
             "question_id": "22018181-e293-4308-8289-ecfaac26406f",
@@ -3358,7 +3417,8 @@
                     "first_character_index": 4929,
                     "last_character_index": 5249
                 }
-            ]
+            ],
+            "answer": "When a reshape operation in vLLM's noop elimination has more than one -1 in the shape parameter, it results in a graph that is not eliminated, and the graph is saved with the \"before_noop_elimination\" output. [Source: data/raw/vllm-0.10.1/vllm/compilation/noop_elimination.py]"
         },
         {
             "question_id": "79ef0eef-b8b3-49d1-a8d9-30b99ce0c4d7",
@@ -3414,7 +3474,8 @@
                     "first_character_index": 14545,
                     "last_character_index": 15337
                 }
-            ]
+            ],
+            "answer": "The default value for the use_bitsandbytes_4bit attribute when it's not present on a parameter object in vLLM's linear layer is `False`. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/fused_moe/layer.py]"
         },
         {
             "question_id": "92d69198-b21e-416c-a8ba-bc8a6653c4d9",
@@ -3470,7 +3531,8 @@
                     "first_character_index": 380,
                     "last_character_index": 778
                 }
-            ]
+            ],
+            "answer": "The conditions for use_aiter_and_is_supported to be True in vLLM's FP8 quantization are that the model must be built with CUDA 12.2 or later. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/compressed_tensors/schemes/compressed_tensors_24.py]"
         },
         {
             "question_id": "7d3ccec1-4036-465d-a081-579807af5896",
@@ -3526,7 +3588,8 @@
                     "first_character_index": 21769,
                     "last_character_index": 23709
                 }
-            ]
+            ],
+            "answer": "The supported spatial pooling modes in LlavaNextVideoPooler are \"convolutional\" and \"maxpooling\". [Source: data/raw/vllm-0.10.1/vllm/model_executor/models/llava_next_video.py]"
         },
         {
             "question_id": "cb7cbccd-ab96-4695-9c7a-9197e6b254a8",
@@ -3582,7 +3645,8 @@
                     "first_character_index": 4059,
                     "last_character_index": 4365
                 }
-            ]
+            ],
+            "answer": "The default value for apply_router_weight_on_input is not explicitly stated in the provided context. However, based on the information given, if apply_router_weight_on_input is set to `True`, it indicates that router weights are already applied on the input. If it is set to `False`, it means the router weights are not applied on the input. Since the context does not specify the default value,"
         },
         {
             "question_id": "02b4ba56-66f8-4cf5-8d0a-621ea70030e7",
@@ -3638,7 +3702,8 @@
                     "first_character_index": 1780,
                     "last_character_index": 1866
                 }
-            ]
+            ],
+            "answer": "The compilation levels that cause do_not_compile to be set to True in vLLM's compilation decorator are `CompilationLevel.DYNAMO_AS_IS` and `CompilationLevel.NO_COMPILATION`. [Source: data/raw/vllm-0.10.1/vllm/compilation/decorators.py]"
         },
         {
             "question_id": "a96c1a73-d5d0-4599-85ac-9dd74c52c20f",
@@ -3694,7 +3759,8 @@
                     "first_character_index": 48687,
                     "last_character_index": 50022
                 }
-            ]
+            ],
+            "answer": "The default value of inputs_embeds parameter in DeepSeek model's forward method is not explicitly mentioned in the provided context. However, based on the information given, the routing_method_type is set to flashinfer.RoutingMethodType.DeepSeekV3. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/modelopt.py]"
         },
         {
             "question_id": "94ade925-c345-413f-8410-48cf17c65b99",
@@ -3750,7 +3816,8 @@
                     "first_character_index": 23551,
                     "last_character_index": 23904
                 }
-            ]
+            ],
+            "answer": "The AutoWeightsLoader skips the \"lm_head\" prefix when tie_word_embeddings is True. [Source: data/raw/vllm-0.10.1/vllm/model_executor/models/grok1.py]"
         },
         {
             "question_id": "eea9e938-c8f8-4a7a-b262-66e81e9a0201",
@@ -3806,7 +3873,8 @@
                     "first_character_index": 195641,
                     "last_character_index": 195946
                 }
-            ]
+            ],
+            "answer": "The NVML GPU instance profile constants defined in vLLM's pynvml module are `nvmlGpuInstanceGetComputeInstanceProfileInfoV` and `nvmlDeviceGetGpuInstanceProfileInfoV`. [Source: data/raw/vllm-0.10.1/vllm/third_party/pynvml.py]"
         },
         {
             "question_id": "b9f85113-c988-47ad-993b-01aec1efe22d",
@@ -3862,7 +3930,8 @@
                     "first_character_index": 13585,
                     "last_character_index": 13883
                 }
-            ]
+            ],
+            "answer": "The shard_id values used in the stacked_params_mapping for gate_up_proj in vLLM's step3_text model are 0 and 1. [Source: data/raw/vllm-0.10.1/vllm/model_executor/models/step3_text.py]"
         },
         {
             "question_id": "ef591476-8135-4e25-baa9-96c42dbe3ee5",
@@ -3918,7 +3987,8 @@
                     "first_character_index": 20578,
                     "last_character_index": 21146
                 }
-            ]
+            ],
+            "answer": "The default value of `tie_word_embeddings` in vLLM's FalconForCausalLM class is not specified in the context provided. [Source: context]"
         },
         {
             "question_id": "df39833c-7c8c-4e82-b6fd-a66f3b8ce929",
@@ -3974,7 +4044,8 @@
                     "first_character_index": 26663,
                     "last_character_index": 26884
                 }
-            ]
+            ],
+            "answer": "The default value for engine_id when creating connectors in MultiKVConnector is not explicitly mentioned in the provided context. However, based on typical usage, the engine_id is likely used to identify the specific model or system being used. [Source: data/raw/vllm-0.10.1/vllm/distributed/kv_transfer/kv_connector/v1/base.py]"
         },
         {
             "question_id": "17204ac3-d7f6-4d82-b2fc-69125f6bb1e9",
@@ -4030,7 +4101,8 @@
                     "first_character_index": 995,
                     "last_character_index": 2442
                 }
-            ]
+            ],
+            "answer": "The provided context does not mention any datasets supported by ASRDataset or MLPerfDataset in vLLM benchmarks. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/compressed_tensors/compressed_tensors.py]"
         },
         {
             "question_id": "d40d1b96-89d9-49b0-b2bb-85202cb491f3",
@@ -4086,7 +4158,8 @@
                     "first_character_index": 995,
                     "last_character_index": 2442
                 }
-            ]
+            ],
+            "answer": "The test model names used in vLLM's test_utils.py for testing different model types and quantization methods are not explicitly mentioned in the provided context. [Source: data/raw/vllm-0.10.1/tools/generate_nightly_torch_test.py]"
         },
         {
             "question_id": "5ddbbb60-4372-4ce2-b0a9-64e59803e7e1",
@@ -4142,7 +4215,8 @@
                     "first_character_index": 28857,
                     "last_character_index": 29795
                 }
-            ]
+            ],
+            "answer": "The default value of the global_num_experts parameter in the forward_xpu method of vLLM's fused MOE layer is 1. [Source: data/raw/vllm-0.10.1/vllm/model_executor/models/ernie45_moe.py]"
         },
         {
             "question_id": "8e79a26d-0035-449d-9fb8-e50ac242396a",
@@ -4198,7 +4272,8 @@
                     "first_character_index": 7818,
                     "last_character_index": 9810
                 }
-            ]
+            ],
+            "answer": "The default value for the `intermediate_tensors` parameter in GranitemoehybridForCausalLM's forward method is not explicitly provided in the context. [Source: path/to/file.py]"
         },
         {
             "question_id": "4ac3026d-7b4f-4723-9116-7aa546efed71",
@@ -4254,7 +4329,8 @@
                     "first_character_index": 7499,
                     "last_character_index": 8036
                 }
-            ]
+            ],
+            "answer": "The default value of the dst parameter in the tensor_model_parallel_gather function is 0. [Source: data/raw/vllm-0.10.1/vllm/distributed/communication_op.py]"
         },
         {
             "question_id": "e5baac73-d8dc-4ea5-ac58-41c8d3419f28",
@@ -4310,7 +4386,8 @@
                     "first_character_index": 23502,
                     "last_character_index": 24182
                 }
-            ]
+            ],
+            "answer": "The value used for m_j when the computed maximum is negative infinity in vLLM's Triton attention implementation is not provided in the given context. [Source: data/raw/vllm-0.10.1/vllm/config/__init__.py]"
         },
         {
             "question_id": "b01b004f-6b12-404b-923d-c9e9aac9fb84",
@@ -4366,7 +4443,8 @@
                     "first_character_index": 65895,
                     "last_character_index": 66738
                 }
-            ]
+            ],
+            "answer": "The default value of the pad_to parameter in vLLM's pad_vocab_size function is `DEFAULT_VOCAB_PADDING_SIZE`. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/vocab_parallel_embedding.py]"
         },
         {
             "question_id": "6adb31ac-4f50-4dc4-8383-47b6c47a3a3f",
@@ -4422,7 +4500,8 @@
                     "first_character_index": 76123,
                     "last_character_index": 76237
                 }
-            ]
+            ],
+            "answer": "The default lora_int_id value when `lora_request` is `None` in vLLM's sequence is `[Source: path/to/file.py]`."
         },
         {
             "question_id": "5cd305eb-6726-4663-a730-441d0060daf4",
@@ -4478,7 +4557,8 @@
                     "first_character_index": 65301,
                     "last_character_index": 65737
                 }
-            ]
+            ],
+            "answer": "The condition must be that the prompt_tokens_details are included in the final usage info in vLLM's completion serving. [Source: context]"
         },
         {
             "question_id": "30622359-490d-493a-8f1c-6f05f80bc91b",
@@ -4534,7 +4614,8 @@
                     "first_character_index": 41637,
                     "last_character_index": 42681
                 }
-            ]
+            ],
+            "answer": "When inputs_embeds is None, input_ids is not used in the forward pass of LlaVA-NeXT-Video. [Source: context]"
         },
         {
             "question_id": "ce1a4fb2-2386-462d-9e53-7c343d769c9a",
@@ -4590,7 +4671,8 @@
                     "first_character_index": 189,
                     "last_character_index": 532
                 }
-            ]
+            ],
+            "answer": "The environment variable checked as a fallback when CUDNN library detection fails is `CUDA_HOME`. [Source: data/raw/vllm-0.10.1/vllm/entrypoints/cli/collect_env.py]"
         },
         {
             "question_id": "17087e20-d7c9-4c3a-9b8b-0e948a681694",
@@ -4646,7 +4728,8 @@
                     "first_character_index": 1833,
                     "last_character_index": 2286
                 }
-            ]
+            ],
+            "answer": "The parameter value set for `requires_grad` when creating `Parameter` objects in the `_load_weights_from_qkv_linear` method is `True`. [Source: path/to/file.py]"
         },
         {
             "question_id": "b7a33ae4-5232-47be-b8fc-9370be3ab073",
@@ -4702,7 +4785,8 @@
                     "first_character_index": 5871,
                     "last_character_index": 7402
                 }
-            ]
+            ],
+            "answer": "The dimensions and data types of the tensors returned by the `get_inputs` method in `LastAllReduceRMSNormPattern` are not explicitly provided in the context. [Source: path/to/file.py]"
         },
         {
             "question_id": "3c524f7f-48dd-49f2-95a6-a668f6d5af26",
@@ -4758,7 +4842,8 @@
                     "first_character_index": 21172,
                     "last_character_index": 22421
                 }
-            ]
+            ],
+            "answer": "Yes, draft_probs can be None in vLLM's rejection sampler, and this happens when the `NO_DRAFT_PROBS` parameter is set to `None`. [Source: data/raw/vllm-0.10.1/vllm/v1/sample/rejection_sampler.py]"
         },
         {
             "question_id": "b18b84c9-0350-4316-bb67-e165ad791ec9",
@@ -4814,7 +4899,8 @@
                     "first_character_index": 29330,
                     "last_character_index": 29475
                 }
-            ]
+            ],
+            "answer": "The string prefix used to identify SSE comments in vLLM's endpoint request processing is `sse`. [Source: path/to/file.py]"
         },
         {
             "question_id": "a99a010d-4de4-4f17-ac4f-bf31f19db7ea",
@@ -4870,7 +4956,8 @@
                     "first_character_index": 36683,
                     "last_character_index": 36808
                 }
-            ]
+            ],
+            "answer": "The copy_operation parameter accepts CopyBlocksOp. [Source: data/raw/vllm-0.10.1/vllm/distributed/kv_transfer/kv_connector/v1/nixl_connector.py]"
         },
         {
             "question_id": "ec9d99ac-0dd1-4e40-b840-df41a82aff1b",
@@ -4926,7 +5013,8 @@
                     "first_character_index": 35152,
                     "last_character_index": 35949
                 }
-            ]
+            ],
+            "answer": "The value used for the num_kv_heads parameter when calling get_mla_metadata in FlashMLAState's graph_capture method is 1. [Source: data/raw/vllm-0.10.1/vllm/attention/backends/flashmla.py]"
         },
         {
             "question_id": "c741046d-939d-4493-bd9a-2a5d89cc5f7f",
@@ -4982,7 +5070,8 @@
                     "first_character_index": 17112,
                     "last_character_index": 17377
                 }
-            ]
+            ],
+            "answer": "The default value of the bias parameter in the __init__ method of vLLM's mllama model convolution class is not specified in the provided context. [Source: data/raw/vllm-0.10.1/vllm/model_executor/models/phi4mm_utils.py]"
         },
         {
             "question_id": "df5084f8-4378-43c9-aaf1-55147460923a",
@@ -5038,7 +5127,8 @@
                     "first_character_index": 27248,
                     "last_character_index": 27298
                 }
-            ]
+            ],
+            "answer": "The constant value for NVML_FI_DEV_NVLINK_RECOVERY_ERROR_COUNT_TOTAL in vLLM's pynvml module is 59. [Source: data/raw/vllm-0.10.1/vllm/third_party/pynvml.py]"
         },
         {
             "question_id": "83396129-7585-435e-9683-271ddfa46475",
@@ -5094,7 +5184,8 @@
                     "first_character_index": 8368,
                     "last_character_index": 8430
                 }
-            ]
+            ],
+            "answer": "The expected tensor dimensions for w13_weight_scale in vLLM's MXFP4 quantization layer are [Source: path/to/file.py]."
         },
         {
             "question_id": "da1e13f1-5be1-4854-ac7c-4ee8f6508469",
@@ -5150,7 +5241,8 @@
                     "first_character_index": 21925,
                     "last_character_index": 22637
                 }
-            ]
+            ],
+            "answer": "The default value of min_stats_update_interval_ms in DPCoordinatorProc's __init__ method is 100 milliseconds. [Source: data/raw/vllm-0.10.1/vllm/v1/engine/coordinator.py]"
         },
         {
             "question_id": "8b219348-ad43-407d-9b13-46cd8fa2fa1c",
@@ -5206,7 +5298,8 @@
                     "first_character_index": 690,
                     "last_character_index": 1154
                 }
-            ]
+            ],
+            "answer": "The simple_buffer module returns a list of tokens when tokens_recver is None in the KV lookup buffer. [Source: path/to/simple_buffer.py]"
         },
         {
             "question_id": "f9d7bb96-a32b-4caf-86a0-158a821354c4",
@@ -5262,7 +5355,8 @@
                     "first_character_index": 2027,
                     "last_character_index": 2265
                 }
-            ]
+            ],
+            "answer": "The default value of the cutlass_block_fp8_supported parameter in apply_w8a8_block_fp8_linear is `True`. [Source: data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/utils/w8a8_utils.py]"
         },
         {
             "question_id": "e9b6052b-222e-432d-9582-064471de4b91",
@@ -5318,7 +5412,8 @@
                     "first_character_index": 10735,
                     "last_character_index": 11314
                 }
-            ]
+            ],
+            "answer": "The default value of BLOCK_TABLE_EXTENDER in MLACommonMetadataBuilder is an empty list, represented as [[]]. [Source: data/raw/vllm-0.10.1/vllm/v1/attention/backends/mla/rocm_aiter_mla.py]"
         },
         {
             "question_id": "4a5b9aca-fbf7-486d-b210-47913db68ba7",
@@ -5374,7 +5469,8 @@
                     "first_character_index": 32684,
                     "last_character_index": 32744
                 }
-            ]
+            ],
+            "answer": "The condition that prevents tensors from being moved to the device in the FlashInfer attention backend's prepare method is that the tensor must not be a scalar. [Source: path/to/file.py]"
         },
         {
             "question_id": "43927740-4195-49d1-b606-e2e813d3e2fe",
@@ -5430,7 +5526,8 @@
                     "first_character_index": 10715,
                     "last_character_index": 11017
                 }
-            ]
+            ],
+            "answer": "The default value of the `gpu` parameter in the function is 0. [Source: data/raw/vllm-0.10.1/vllm/utils/__init__.py]"
         },
         {
             "question_id": "ea812b8d-317d-48bd-a149-bf73747592d5",
@@ -5486,7 +5583,8 @@
                     "first_character_index": 134738,
                     "last_character_index": 134904
                 }
-            ]
+            ],
+            "answer": "The type hint for the `kv_range_for_decode` parameter in the `_attention_with_mask` method is not provided in the context. [Source: data/raw/vllm-0.10.1/vllm/engine/arg_utils.py]"
         },
         {
             "question_id": "5ff8e342-b4e2-45e1-9ef0-990915c5bb1f",
@@ -5542,7 +5640,8 @@
                     "first_character_index": 12476,
                     "last_character_index": 12814
                 }
-            ]
+            ],
+            "answer": "The default timeout value for VLLM_RPC_TIMEOUT is 10000 [Source: data/raw/vllm-0.10.1/vllm/envs.py]."
         },
         {
             "question_id": "cc784ab6-ef8a-402d-b874-4160ec7c87f1",
@@ -5598,7 +5697,8 @@
                     "first_character_index": 19864,
                     "last_character_index": 19998
                 }
-            ]
+            ],
+            "answer": "The custom allreduce is enabled in vLLM's CudaCommunicator if the custom allreduce library is present, as indicated by the code in the provided context. [Source: data/raw/vllm-0.10.1/vllm/distributed/device_communicators/custom_all_reduce.py]"
         }
     ],
     "k": 10

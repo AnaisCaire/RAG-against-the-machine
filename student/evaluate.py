@@ -29,13 +29,14 @@ class Evaluator:
         truth_map = {q['question_id']: q['sources'] for q in ground_truth_data['rag_questions']}
 
         total_recall = 0.0
+        total_precision = 0.0
         num_questions = len(student_data['search_results'])
 
-        # 3. Calculate Recall@k for every question
+        # 3. Calculate Recall@k and Precision@k for every question
         for result in student_data['search_results']:
             q_id = result['question_id']
             # Slice the predicted list to ensure we only look at top 'k'
-            pred_sources = result['retrieved_sources'][:k] 
+            pred_sources = result['retrieved_sources'][:k]
             expected_sources = truth_map.get(q_id, [])
 
             if not expected_sources:
@@ -73,11 +74,30 @@ class Evaluator:
             question_recall = found_count / len(expected_sources)
             total_recall += question_recall
 
+            # Precision@k: how many of the retrieved sources are relevant
+            relevant_retrieved = 0
+            for pred in pred_sources:
+                for exp in expected_sources:
+                    if exp['file_path'] == pred['file_path']:
+                        overlap_start = max(exp['first_character_index'], pred['first_character_index'])
+                        overlap_end = min(exp['last_character_index'], pred['last_character_index'])
+                        overlap_len = max(0, overlap_end - overlap_start)
+                        exp_len = exp['last_character_index'] - exp['first_character_index']
+                        overlap_ratio = overlap_len / exp_len if exp_len > 0 else 0.0
+                        if overlap_ratio >= 0.05:
+                            relevant_retrieved += 1
+                            break
+
+            question_precision = relevant_retrieved / k if k > 0 else 0.0
+            total_precision += question_precision
+
         # 4. Final System Score
         final_recall = total_recall / num_questions
+        final_precision = total_precision / num_questions
 
         print(f"Questions evaluated: {num_questions}")
         print(f"Recall@{k}: {final_recall:.3f}")
+        print(f"Precision@{k}: {final_precision:.3f}")
 
         # Dynamically check the threshold based on the filename
         if "docs" in dataset_path:

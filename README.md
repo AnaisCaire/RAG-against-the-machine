@@ -155,3 +155,29 @@ the last and first index for the chunking.
 For any docs question, your index is nearly 99% noise. BM25 has 60× more Python chunks to pick from than docs chunks, so it almost always returns code files first. This accounts for 24 of your 35 failing questions.
 
 You can see it in the output — queries like "What hardware platforms does vLLM support?" return Python test files instead of the relevant .md file.
+
+## the schools computer problems...
+
+if i pip install uv even in goinfre, it will install in my home directory
+
+We also need to control where the computer will save the data and route everything to do to the goifre...
+
+## setp 1:
+    make folders for binairies and caches: 
+    ```bash
+    mkdir -p /goinfre/$USER/bin
+    mkdir -p /goinfre/$USER/uv_cache
+    mkdir -p /goinfre/$USER/hf_cache
+    ```
+## step 2:
+    reroute enviroment variables so it looks in goinfre for commands and forces the download to goinfre insted of home drive
+    ```bash
+    export PATH="/goinfre/$USER/bin:$PATH"
+    export UV_CACHE_DIR="/goinfre/$USER/uv_cache"
+    export HF_HOME="/goinfre/$USER/hf_cache"
+    ```
+### step 3:
+    install uv directy in goinfre 
+    ```bash
+    curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/goinfre/$USER/bin" sh
+    ```
