@@ -156,6 +156,12 @@ For any docs question, your index is nearly 99% noise. BM25 has 60× more Python
 
 You can see it in the output — queries like "What hardware platforms does vLLM support?" return Python test files instead of the relevant .md file.
 
+## What about speed 
+speed was the second biggest issue... for a question to be valid it needs to generate under 2 minutes...
+I had to learn more about the torch library and how to optimize GPU acceleration.
+this article is perfect to understand it:
+https://deepnote.com/blog/ultimate-guide-to-pytorch-library-in-python
+
 ## the schools computer problems...
 
 if i pip install uv even in goinfre, it will install in my home directory

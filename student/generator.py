@@ -58,6 +58,50 @@ class Generator:
 
         prompt += f"Question: {query}\nAnswer:"
         return prompt
+    
+    def expand_querry(self, query: str) -> str:
+        """
+        make the LLM rewrite the query with more keywords
+        """
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a search engine keyword generator. "
+                    "Extract the core technical concepts from the user's query and generate likely Python "
+                    "variable names, class names, or function names (using snake_case or CamelCase). "
+                    "Output ONLY a space-separated list of keywords. Do not explain or write sentences."
+                )
+            },
+            {
+                "role": "user",
+                "content": query
+            }
+        ]
+        text = self.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+            enable_thinking=False
+        )
+        inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs,
+                max_new_tokens=30, # Keep it very short and fast
+                do_sample=False,
+                pad_token_id=self.tokenizer.eos_token_id
+            )
+            
+        input_length = inputs["input_ids"].shape[1]
+        generated_tokens = outputs[0][input_length:]
+        expanded_keywords = self.tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+        
+        if "</think>" in expanded_keywords:
+            expanded_keywords = expanded_keywords.split("</think>")[-1].strip()
+
+        # We return the original query PLUS the LLM's guessed keywords!
+        return f"{query} {expanded_keywords}"
 
     def generate_answer(self,
                         question_id: str,

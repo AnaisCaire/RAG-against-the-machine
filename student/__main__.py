@@ -6,8 +6,11 @@ from student.ingestion import IngestionEngine
 from student.generator import Generator
 from student.batch import BatchProcessor
 import fire
+import torch
 import uuid
 
+# better cach utilisation controlling the physical cores:
+torch.set_num_threads(4)
 
 class RAGCLI:
     """
