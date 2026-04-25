@@ -12,7 +12,10 @@ run:
 clean:
 	rm -rf .mypy_cache .pytest_cache
 	find . -type d -name "__pycache__" -exec rm -rf {} +
-	rm -f path/to/your/ingestion.log
+	rm -f ingestion_errors.log
+	rm -rf data/processes/*/
+	rm -f data/output/search_results/*
+	rm -f data/output/search_results_and_answer/*
 	@echo "--- Cleanup Complete ---"
 
 debug:

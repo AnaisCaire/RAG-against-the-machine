@@ -1,3 +1,5 @@
+import os
+os.environ["OMP_NUM_THREADS"] = "1"
 from typing import Any, List
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from student.models import MinimalSource, MinimalAnswer
@@ -17,9 +19,10 @@ class Generator:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model: Any = AutoModelForCausalLM.from_pretrained(
             model_name,
-            torch_dtype=torch.float16,
+            dtype=torch.float16,
         ).to(self.device)
         self.model.eval()
+        self.answer_cache = {}
 
     def _build_prompt(self,
                       query: str,
@@ -58,7 +61,7 @@ class Generator:
 
         prompt += f"Question: {query}\nAnswer:"
         return prompt
-    
+
     def expand_querry(self, query: str) -> str:
         """
         make the LLM rewrite the query with more keywords
@@ -88,15 +91,17 @@ class Generator:
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
-                max_new_tokens=30, # Keep it very short and fast
+                max_new_tokens=30,  # Keep it very short and fast
                 do_sample=False,
                 pad_token_id=self.tokenizer.eos_token_id
             )
-            
+
         input_length = inputs["input_ids"].shape[1]
         generated_tokens = outputs[0][input_length:]
-        expanded_keywords = self.tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
-        
+        expanded_keywords = self.tokenizer.decode(
+            generated_tokens,
+            skip_special_tokens=True).strip()
+
         if "</think>" in expanded_keywords:
             expanded_keywords = expanded_keywords.split("</think>")[-1].strip()
 
@@ -114,10 +119,15 @@ class Generator:
         returns a strictly typed response.
         """
 
-        # 1. Build the prompt
+        if query in self.answer_cache:
+            return MinimalAnswer(
+                question_id=question_id,
+                question=query,
+                retrieved_sources=retrieved_sources,
+                answer=self.answer_cache[query]
+            )
 
         prompt = self._build_prompt(query, retrieved_sources)
-        # 2. We structure the prompt as a conversation!
         messages = [
             {
                 "role": "system",
@@ -135,8 +145,7 @@ class Generator:
                 "content": prompt
             }
         ]
-        # 3. Ask the AI to generate text
-        # a. render messages to a plain string (thinking disabled)
+
         text = self.tokenizer.apply_chat_template(
             messages,
             tokenize=False,
@@ -163,7 +172,7 @@ class Generator:
         # Fallback cleanup just in case the model ignores the instruction
         if "</think>" in raw_answer_string:
             raw_answer_string = raw_answer_string.split("</think>")[-1].strip()
-
+        self.answer_cache[query] = raw_answer_string
         # 4. Package everything into the MinimalAnswer Pydantic model
         return MinimalAnswer(
             question_id=question_id,

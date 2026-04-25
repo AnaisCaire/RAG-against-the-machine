@@ -9,8 +9,6 @@ import fire
 import torch
 import uuid
 
-# better cach utilisation controlling the physical cores:
-torch.set_num_threads(4)
 
 class RAGCLI:
     """
@@ -26,9 +24,9 @@ class RAGCLI:
         print("=== Building docs index (md/txt) ===")
         docs_ingestion = IngestionEngine(max_chunk_size=1500)
         docs_data = docs_ingestion.ingest_docs(raw_dir)
-        docs_indexer = Indexer()
+        docs_indexer = Indexer(mode="semantic")
         docs_indexer.build_index(docs_data, is_code=False)
-        docs_indexer.save_index("data/processes/index_bm25_docs")
+        docs_indexer.save_index("data/processes/index_semantic_docs")
 
         print("=== Building code index (py) ===")
         code_ingestion = IngestionEngine(max_chunk_size=max_chunk_size)
@@ -36,9 +34,9 @@ class RAGCLI:
         code_data = [c for c in code_data if '/tests/' not in c.file_path
             and '/benchmarks/' not in c.file_path
             and '/examples/' not in c.file_path]
-        code_indexer = Indexer()
+        code_indexer = Indexer(mode="semantic")
         code_indexer.build_index(code_data, is_code=True)
-        code_indexer.save_index("data/processes/index_bm25_code")
+        code_indexer.save_index("data/processes/index_semantic_code")
 
     # ==== Retrival Phase ====
 
@@ -47,7 +45,7 @@ class RAGCLI:
 
         print(f"Searching for: '{query}'")
         indexer = Indexer()
-        indexer.load_index("data/processes/index_bm25_docs", is_code=False)
+        indexer.load_index("data/processes/index_semantic_docs", is_code=False)
         found_chunks = indexer.search(query, k)
         print("\n--- Top Results ---")
         for i, chunk in enumerate(found_chunks):
@@ -58,21 +56,29 @@ class RAGCLI:
     def search_dataset(self,
                        dataset_path: str,
                        save_directory: str,
-                       k: int = 10):
-        """ Process a dataset of questions and save the res"""
+                       k: int = 10,
+                       expand: bool = False):
+        """
+        Process a dataset of questions and save the res
+        """
         name = os.path.basename(dataset_path)
         if "code" in name:
-            index_dir = "data/processes/index_bm25_code"
+            index_dir = "data/processes/index_semantic_code"
             is_code = True
         else:
-            index_dir = "data/processes/index_bm25_docs"
+            index_dir = "data/processes/index_semantic_docs"
             is_code = False
-        indexer = Indexer()
+        indexer = Indexer(mode="semantic")
         indexer.load_index(index_dir, is_code=is_code)
-        batcher = BatchProcessor(search_engine=indexer)
+        gen = None
+        if expand:
+            print("Loading Generator for Query Expansion...")
+            gen = Generator()
+        batcher = BatchProcessor(search_engine=indexer, generator=gen)
         batcher.search_dataset(dataset_path=dataset_path,
                                save_directory=save_directory,
-                               k=k)
+                               k=k,
+                               expand=expand)
 
     # ==== Augmentation Phase ====
 
@@ -80,8 +86,8 @@ class RAGCLI:
         """Search the index and generate AI answer for a query"""
         print(f"Answering query: '{query}'")
         # 1. Search
-        indexer = Indexer()
-        indexer.load_index("data/processes/index_bm25", is_code=False)
+        indexer = Indexer(mode="semantic")
+        indexer.load_index("data/processes/index_semantic_docs", is_code=False)
         found_chunks = indexer.search(query, k)
 
         # 2. Generate

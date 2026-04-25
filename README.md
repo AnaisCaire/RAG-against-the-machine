@@ -162,6 +162,32 @@ I had to learn more about the torch library and how to optimize GPU acceleration
 this article is perfect to understand it:
 https://deepnote.com/blog/ultimate-guide-to-pytorch-library-in-python
 
+### Bonuses
+
+## LLM powered Querry Expansion
+    this was a good bonus to add becuse i wanted to augment the accuray for the code base search...
+    BM25 is a super good lexical search algo for strandar text but it does struggle with codebases.
+    if i try to look for "flash attention" BM25 will have trouble finind "triton_flash_attention()"
+    Camel snake functions are treated in this model as a single word... making the match super unlikely
+# implementation
+    before a search, we route the query to the Generator 
+    the generator will then brainstorm related words linked to the question
+    we then append theses to the user's original question
+
+## Result catching (Memory Bank)
+    users tend to ask the same questions alot of times... so Running the model again in expensive and time-consuming for nothing.
+    No need to force the GPU to perdorme the same matrix multiplication it aleardy did
+# implementation
+    create a hash map in the generator as a "memory bank"
+    before answering a question it checks if the same question is already there.
+    if found we just give out the same answer directly
+
+## Seamntic Embedding
+    2 new concepts:
+        sentence transformers: explain
+        FAISS: explain
+    1 update the inderer.py to have both BM25 and semantic embedding
+
 ## the schools computer problems...
 
 if i pip install uv even in goinfre, it will install in my home directory
