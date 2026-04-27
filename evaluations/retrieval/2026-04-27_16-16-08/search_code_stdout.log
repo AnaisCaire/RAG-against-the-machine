@@ -1,0 +1,4 @@
+Loading Semantic Embedding Model
+Load complete!
+Processing dataset: /home/anais/Desktop/RAG/data/datasets/private/UnansweredQuestions/dataset_code_private.json
+Search dataset complete! Saved to /home/anais/Desktop/RAG/evaluations/retrieval/2026-04-27_16-16-08/search_results/dataset_code_private.json
