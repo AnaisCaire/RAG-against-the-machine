@@ -30,7 +30,7 @@ class RagDataset(BaseModel):
 class MinimalSearchResults(BaseModel):
     """One question's retrieval result: the question plus its top-k sources."""
     question_id: str
-    question: str
+    question_str: str
     retrieved_sources: List[MinimalSource]
 
 

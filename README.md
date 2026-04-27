@@ -31,13 +31,13 @@ uv run python -m src search_dataset --dataset_path data/datasets/UnansweredQuest
 ### 4. Batch Answer a Dataset
 To generate all the AI answers for the searched dataset, and save the final result, use this.
 ```bash
-uv run python -m src answer_dataset --src_search_results_path data/output/search_results/dataset_code_public.json --save_directory data/output/search_results_and_answer
+uv run python -m src answer_dataset --student_search_results_path data/output/search_results/dataset_code_public.json --save_directory data/output/search_results_and_answer
 ```
 
 ### 5. Evaluate Performance
 to evaluate the accuracy of the answers, with the ground truth dataset, use this.
 ```bash
-uv run python -m src evaluate --src_results_path="data/output/search_results/dataset_code_public.json" --dataset_path="data/datasets/AnsweredQuestions/dataset_code_public.json" --k=10
+uv run python -m src evaluate --student_results_path="data/output/search_results/dataset_code_public.json" --dataset_path="data/datasets/AnsweredQuestions/dataset_code_public.json" --k=10
 ```
 
 # Explanation of my work:

@@ -625,7 +625,7 @@
                     "last_character_index": 6207
                 }
             ],
-            "answer": "The parameter set by vLLM for weight quantization in linear layers is determined by the supported hardware and quantization scheme. [Source: data/raw/vllm-0.10.1"
+            "answer": "The parameter set by vLLM for weight quantization in linear layers is determined by the supported hardware. [Source: data/raw/vllm-0.10.1/docs/features/quant"
         },
         {
             "question_id": "452261bc-6ce4-469e-a9b2-fcddbe26b944",
@@ -1708,7 +1708,7 @@
                     "last_character_index": 11833
                 }
             ],
-            "answer": "The required runner parameter when serving the DSE-Qwen2-MRL model in vLLM is [Source: vllm.model_transformers]."
+            "answer": "The required parameter is [Source: vLLM documentation]."
         },
         {
             "question_id": "87790ff0-09f3-4aa6-8f8e-83180ded4c40",
@@ -3631,14 +3631,14 @@
                     "last_character_index": 17947
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/docs/getting_started/installation/gpu/cuda.inc.md",
-                    "first_character_index": 0,
-                    "last_character_index": 1729
-                },
-                {
                     "file_path": "data/raw/vllm-0.10.1/CMakeLists.txt",
                     "first_character_index": 26485,
                     "last_character_index": 27516
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/getting_started/installation/gpu/cuda.inc.md",
+                    "first_character_index": 0,
+                    "last_character_index": 1729
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/docs/contributing/incremental_build.md",
@@ -4729,7 +4729,7 @@
                     "last_character_index": 3761
                 }
             ],
-            "answer": "[Source: vLLM documentation] The current limitation when using MLP speculators for speculative decoding is that they may not support certain types of input sizes or specific model configurations. [Source: vLL"
+            "answer": "[Source: vLLM documentation] The current limitation when using MLP speculators for speculative decoding is that they are not supported for large-scale, high-dimensional data. [Source: vLLM documentation"
         },
         {
             "question_id": "8ef264c6-cab8-4326-920b-262901ad76e8",

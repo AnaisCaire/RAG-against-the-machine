@@ -3568,14 +3568,14 @@
                     "last_character_index": 17947
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/docs/getting_started/installation/gpu/cuda.inc.md",
-                    "first_character_index": 0,
-                    "last_character_index": 1729
-                },
-                {
                     "file_path": "data/raw/vllm-0.10.1/CMakeLists.txt",
                     "first_character_index": 26485,
                     "last_character_index": 27516
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/getting_started/installation/gpu/cuda.inc.md",
+                    "first_character_index": 0,
+                    "last_character_index": 1729
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/docs/contributing/incremental_build.md",

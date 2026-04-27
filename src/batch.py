@@ -52,7 +52,7 @@ class BatchProcessor:
             found_sources = self.search_engine.search(query=question, k=k)
             search_result_obj = MinimalSearchResults(
                 question_id=question_id,
-                question=q.question,
+                question_str=q.question,
                 retrieved_sources=found_sources)
             results_list.append(search_result_obj)
 
@@ -101,7 +101,7 @@ class BatchProcessor:
 
             answer_obj = self.generator.generate_answer(
                 question_id=result.question_id,
-                query=result.question,
+                query=result.question_str,
                 retrieved_sources=result.retrieved_sources
             )
             answers_list.append(answer_obj)

@@ -4,7 +4,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from src.models import MinimalSource, MinimalAnswer
 import torch
 
-os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "4"
 
 
 class Generator:
@@ -12,18 +12,20 @@ class Generator:
 
     def __init__(self) -> None:
         """Loads the Qwen model and tokenizer onto the best available device."""
-        self.device: str = "mps" if torch.backends.mps.is_available() else "cpu"
+        self.device: str = (
+        "cuda" if torch.cuda.is_available()
+        else "mps" if torch.backends.mps.is_available()
+        else "cpu"
+    )
 
-        if self.device == "mps":
-            print("⚡ Accelerating with Apple Silicon GPU (MPS)")
-        else:
-            print("🐢 GPU not found. Falling back to CPU (Slow)")
+
+        print(f"Device selected: {self.device}")
 
         model_name = "Qwen/Qwen3-0.6B"
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model: Any = AutoModelForCausalLM.from_pretrained(
             model_name,
-            dtype=torch.float16,
+            dtype=torch.float32,
         ).to(self.device)  # type: ignore[arg-type]
         self.model.eval()
         self.answer_cache: dict[str, str] = {}
@@ -127,7 +129,7 @@ class Generator:
         if query in self.answer_cache:
             return MinimalAnswer(
                 question_id=question_id,
-                question=query,
+                question_str=query,
                 retrieved_sources=retrieved_sources,
                 answer=self.answer_cache[query]
             )
