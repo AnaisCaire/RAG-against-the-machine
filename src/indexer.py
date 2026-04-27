@@ -38,10 +38,12 @@ class Indexer:
                 with open(each_path, 'r', encoding='utf-8') as f:
                     content = f.read()
 
-                # 3. Extract the text for every chunk in this file
+                filename = os.path.basename(each_path)
                 for chunk in file_chunks:
                     chunk_text = content[chunk.first_character_index: chunk.last_character_index]
-                    corpus.append(chunk_text)
+                    # Prepend the filename so BM25/FAISS can discriminate by file
+                    # when many files share boilerplate code patterns.
+                    corpus.append(f"{filename}\n{chunk_text}")
 
             except Exception:
                 print(f"Warning: Could not read {each_path} for corpus creation.")
@@ -120,7 +122,7 @@ class Indexer:
         if not query or not query.strip():
             return []
 
-        CANDIDATE_MULT = 10
+        CANDIDATE_MULT = 20
 
         clean_q = self._clean_text(query)
         stopwords = [] if self.is_code else "en"
