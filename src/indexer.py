@@ -16,6 +16,7 @@ class Indexer:
     def __init__(self) -> None:
         """Loads the sentence-transformer embedding model and initialises BM25."""
         self.corpus_chunks: List[MinimalSource] = []
+        self.chunk_idx_map: Dict[str, int] = {}
         self.is_code: bool = False
 
         self.bm25_retriever = bm25s.BM25()
@@ -56,12 +57,19 @@ class Indexer:
         cleaned = text.replace("_", " ").replace(".", " ")
         return cleaned.lower()
 
+    def _build_chunk_idx_map(self) -> None:
+        self.chunk_idx_map = {
+            f"{c.file_path}_{c.first_character_index}": i
+            for i, c in enumerate(self.corpus_chunks)
+        }
+
     def build_index(self, chunks: List[MinimalSource], is_code: bool) -> None:
         """
         Extracts text, tokenizes/embeds it, and builds the index.
         """
         self.corpus_chunks = chunks
         self.is_code = is_code
+        self._build_chunk_idx_map()
 
         print("Extracting corpus from chunks...")
         raw_corp: List[str] = self._make_corpus(chunks)
@@ -109,6 +117,7 @@ class Indexer:
 
         self.bm25_retriever = bm25s.BM25.load(load_dir, load_corpus=False)
         self.faiss_index = faiss.read_index(os.path.join(load_dir, "faiss.index"))
+        self._build_chunk_idx_map()
 
         print("Load complete!")
 
@@ -122,19 +131,23 @@ class Indexer:
         if not query or not query.strip():
             return []
 
-        CANDIDATE_MULT = 20
+        # For small corpora (docs ~1200 chunks) search everything so no valid
+        # chunk is excluded before RRF runs. For large corpora (code ~50k) a
+        # fixed multiplier keeps latency reasonable.
+        corpus_size = len(self.corpus_chunks)
+        n_candidates = corpus_size if corpus_size <= 5000 else k * 20
 
         clean_q = self._clean_text(query)
         stopwords = [] if self.is_code else "en"
         token_q = bm25s.tokenize(clean_q, stopwords=stopwords)
-        docs, _ = self.bm25_retriever.retrieve(token_q, k=k * CANDIDATE_MULT)
+        docs, _ = self.bm25_retriever.retrieve(token_q, k=n_candidates)
         bm25_results = [self.corpus_chunks[ticket] for ticket in docs[0]]
 
         if self.faiss_index is None:
             raise RuntimeError("FAISS index not loaded. Call build_index or load_index first.")
         query_vector = self.embedding_model.encode([query], normalize_embeddings=True)
-        distances, indices = self.faiss_index.search(
-            np.array(query_vector).astype('float32'), k * CANDIDATE_MULT)
+        _distances, indices = self.faiss_index.search(
+            np.array(query_vector).astype('float32'), n_candidates)
         semantic_results = [
             self.corpus_chunks[idx] for idx in indices[0] if idx != -1
         ]
@@ -155,6 +168,24 @@ class Indexer:
             cid = chunk_id(chunk)
             chunk_lookup[cid] = chunk
             rrf_scores[cid] += 1.0 / (60 + rank + 1)
+
+        sorted_ids = sorted(rrf_scores, key=lambda x: rrf_scores[x], reverse=True)
+
+        # Neighbor expansion: for each top-scoring chunk, add its immediate
+        # neighbors from the same file. This recovers cases where BM25/FAISS
+        # retrieves the chunk just before/after the expected source.
+        for cid in sorted_ids[:k * 3]:
+            idx = self.chunk_idx_map.get(cid)
+            if idx is None:
+                continue
+            for adj_idx in (idx - 1, idx + 1):
+                if 0 <= adj_idx < corpus_size:
+                    adj = self.corpus_chunks[adj_idx]
+                    if adj.file_path == self.corpus_chunks[idx].file_path:
+                        adj_cid = chunk_id(adj)
+                        if adj_cid not in chunk_lookup:
+                            chunk_lookup[adj_cid] = adj
+                            rrf_scores[adj_cid] = rrf_scores[cid] * 0.95
 
         sorted_ids = sorted(rrf_scores, key=lambda x: rrf_scores[x], reverse=True)
         return [chunk_lookup[cid] for cid in sorted_ids[:k]]
