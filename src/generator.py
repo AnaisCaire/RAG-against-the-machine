@@ -4,7 +4,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from src.models import MinimalSource, MinimalAnswer
 import torch
 
-os.environ["OMP_NUM_THREADS"] = "4"
+os.environ["OMP_NUM_THREADS"] = "1"
 
 
 class Generator:
@@ -13,11 +13,10 @@ class Generator:
     def __init__(self) -> None:
         """Loads the Qwen model and tokenizer onto the best available device."""
         self.device: str = (
-        "cuda" if torch.cuda.is_available()
-        else "mps" if torch.backends.mps.is_available()
-        else "cpu"
-    )
-
+            "cuda" if torch.cuda.is_available()
+            else "mps" if torch.backends.mps.is_available()
+            else "cpu"
+        )
 
         print(f"Device selected: {self.device}")
 
@@ -187,6 +186,6 @@ class Generator:
         # 4. Package everything into the MinimalAnswer Pydantic model
         return MinimalAnswer(
             question_id=question_id,
-            question=query,
+            question_str=query,
             retrieved_sources=retrieved_sources,
             answer=raw_answer_string)

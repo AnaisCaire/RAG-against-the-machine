@@ -16,12 +16,12 @@ class RAGCLI:
     def __init__(self) -> None:
         self.evaluator = Evaluator()
 
-    def index(self, max_chunk_size: int = 2000) -> None:
+    def index(self, max_chunk_size: int = 2000, docs_chunk_size: int = 1200) -> None:
         """Build separate docs and code BM25 indices."""
         raw_dir = "data/raw/vllm-0.10.1"
 
-        print("=== Building docs index (md/txt) ===")
-        docs_ingestion = IngestionEngine(max_chunk_size=max_chunk_size)
+        print("=== Building docs index (md/txt/setup.py) ===")
+        docs_ingestion = IngestionEngine(max_chunk_size=docs_chunk_size)
         docs_data = docs_ingestion.ingest_docs(raw_dir)
         docs_indexer = Indexer()
         docs_indexer.build_index(docs_data, is_code=False)
@@ -30,11 +30,12 @@ class RAGCLI:
         print("=== Building code index (py) ===")
         code_ingestion = IngestionEngine(max_chunk_size=max_chunk_size)
         code_data = code_ingestion.ingest_code(raw_dir)
+
         code_data = [
             c for c in code_data
-            if '/tests/' not in c.file_path
-            and '/benchmarks/' not in c.file_path
-            and '/examples/' not in c.file_path
+            if f'{raw_dir}/tests/' not in c.file_path
+            and f'{raw_dir}/benchmarks/' not in c.file_path
+            and f'{raw_dir}/examples/' not in c.file_path
         ]
         code_indexer = Indexer()
         code_indexer.build_index(code_data, is_code=True)

@@ -111,6 +111,29 @@ class CodeChunker(BaseChunker):
 
             # Case B: It is too big, BUT it has a body we can divide more
             elif body:
+                # Emit the header (signature, decorators, leading docstring) before recursing.
+                # Without this, the chars between `def`/`class` and the first body statement
+                # are never stored in any chunk, causing guaranteed recall misses.
+                first_child = body[0]
+                fc_ln = getattr(first_child, 'lineno', None)
+                fc_col = getattr(first_child, 'col_offset', None)
+                if fc_ln is not None and fc_col is not None:
+                    first_body_start = line_starts[fc_ln - 1] + fc_col
+                    if first_body_start > absolute_start:
+                        header_len = first_body_start - absolute_start
+                        if header_len <= self.max_chunk_size:
+                            chunks.append(MinimalSource(
+                                file_path=file_path,
+                                first_character_index=absolute_start,
+                                last_character_index=first_body_start))
+                        else:
+                            txt_chunks = TextChunker(self.max_chunk_size)
+                            node_text = content[absolute_start:first_body_start]
+                            for c in txt_chunks.chunk(file_path, node_text):
+                                chunks.append(MinimalSource(
+                                    file_path=file_path,
+                                    first_character_index=c.first_character_index + absolute_start,
+                                    last_character_index=c.last_character_index + absolute_start))
                 for child_node in body:
                     chunks.extend(self._process_node(child_node,
                                                      content,

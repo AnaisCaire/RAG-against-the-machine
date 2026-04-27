@@ -120,7 +120,7 @@ class Indexer:
         if not query or not query.strip():
             return []
 
-        CANDIDATE_MULT = 4
+        CANDIDATE_MULT = 10
 
         clean_q = self._clean_text(query)
         stopwords = [] if self.is_code else "en"

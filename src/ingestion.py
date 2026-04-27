@@ -28,6 +28,7 @@ class IngestionEngine:
             for dirpath, _, filenames in os.walk(root_dir)
             for filename in filenames
             if filename.endswith(('.md', '.txt'))
+            or (filename.endswith('.py') and dirpath == root_dir)
         ]
 
         for file_path in tqdm(doc_files, desc="Ingesting docs"):
