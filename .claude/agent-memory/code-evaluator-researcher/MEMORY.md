@@ -1,0 +1,2 @@
+- [User Role](user_role.md) — student at 42 school, Python/ML developer working on RAG pipeline project
+- [Project Context](project_rag.md) — RAG-against-the-machine: vLLM RAG system, hybrid BM25+semantic retrieval, peer-evaluated

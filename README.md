@@ -11,33 +11,33 @@ make install
 
 ## Usage and Execution
 
-The entire Retrieval-Augmented Generation (RAG) pipeline is exposed as a Command-Line Interface (CLI) powered by Python Fire. All commands are executed through the student module module.
+The entire Retrieval-Augmented Generation (RAG) pipeline is exposed as a Command-Line Interface (CLI) powered by Python Fire. All commands are executed through the src module module.
 ### 1. build the index
 ```bash
-uv run python -m student index --max_chunk_size 2000
+uv run python -m src index --max_chunk_size 2000
 ```
 ### 2. Answer a single Query
 if you want to ask a specific question, use this.
 ```bash
-uv run python -m student answer "What activation formats does the fused batched MoE layer return in vLLM?" --k 10
+uv run python -m src answer "What activation formats does the fused batched MoE layer return in vLLM?" --k 10
 ```
 
 ### 3. Batch Search a Dataset
 For processing the entire dataset of questions and output the retrieved source coordinates to a JSON file, use this.
 ```bash
-uv run python -m student search_dataset --dataset_path data/datasets/UnansweredQuestions/dataset_docs_public.json --k 10 --save_directory data/output/search_results
+uv run python -m src search_dataset --dataset_path data/datasets/UnansweredQuestions/dataset_code_public.json --k 10 --save_directory data/output/search_results
 ```
 
 ### 4. Batch Answer a Dataset
 To generate all the AI answers for the searched dataset, and save the final result, use this.
 ```bash
-uv run python -m student answer_dataset --student_search_results_path data/output/search_results/dataset_docs_public.json --save_directory data/output/search_results_and_answer
+uv run python -m src answer_dataset --src_search_results_path data/output/search_results/dataset_code_public.json --save_directory data/output/search_results_and_answer
 ```
 
 ### 5. Evaluate Performance
 to evaluate the accuracy of the answers, with the ground truth dataset, use this.
 ```bash
-uv run python -m student evaluate --student_results_path="data/output/search_results/dataset_docs_public.json" --dataset_path="data/datasets/AnsweredQuestions/dataset_docs_public.json" --k=10
+uv run python -m src evaluate --src_results_path="data/output/search_results/dataset_code_public.json" --dataset_path="data/datasets/AnsweredQuestions/dataset_code_public.json" --k=10
 ```
 
 # Explanation of my work:
@@ -142,9 +142,9 @@ the last and first index for the chunking.
 
     we need to read the Json files.
     theses 2 functions do that exactly
-    - search_dataset (Chapter V.6.5): Reads the UnansweredQuestions JSON, searches the index, and saves a StudentSearchResults JSON.
+    - search_dataset (Chapter V.6.5): Reads the UnansweredQuestions JSON, searches the index, and saves a srcSearchResults JSON.
 
-    - answer_dataset (Chapter V.6.7): Reads the newly created StudentSearchResults JSON, passes those pre-found tickets to the LLM, and saves a StudentSearchResultsAndAnswer JSON.
+    - answer_dataset (Chapter V.6.7): Reads the newly created srcSearchResults JSON, passes those pre-found tickets to the LLM, and saves a srcSearchResultsAndAnswer JSON.
 
 
 ## accuracy problems
