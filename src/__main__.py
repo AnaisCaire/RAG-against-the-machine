@@ -16,7 +16,11 @@ class RAGCLI:
     def __init__(self) -> None:
         self.evaluator = Evaluator()
 
-    def index(self, max_chunk_size: int = 2000, docs_chunk_size: int = 1200) -> None:
+    def index(
+        self,
+        max_chunk_size: int = 2000,
+        docs_chunk_size: int = 1200
+    ) -> None:
         """Build separate docs and code BM25 indices."""
         raw_dir = "data/raw/vllm-0.10.1"
 
@@ -49,18 +53,30 @@ class RAGCLI:
         print(f"Searching for: '{query}'")
 
         docs_indexer = Indexer()
-        docs_indexer.load_index("data/processes/index_hybrid_docs", is_code=False)
+        docs_indexer.load_index(
+            "data/processes/index_hybrid_docs", is_code=False
+        )
         docs_chunks = docs_indexer.search(query, k)
         print("\n--- Top Docs Results ---")
         for i, chunk in enumerate(docs_chunks):
-            print(f"{i+1}. {chunk.file_path} [Chars {chunk.first_character_index}:{chunk.last_character_index}]")
+            print(
+                f"{i+1}. {chunk.file_path} "
+                f"[Chars {chunk.first_character_index}"
+                f":{chunk.last_character_index}]"
+            )
 
         code_indexer = Indexer()
-        code_indexer.load_index("data/processes/index_hybrid_code", is_code=True)
+        code_indexer.load_index(
+            "data/processes/index_hybrid_code", is_code=True
+        )
         code_chunks = code_indexer.search(query, k)
         print("\n--- Top Code Results ---")
         for i, chunk in enumerate(code_chunks):
-            print(f"{i+1}. {chunk.file_path} [Chars {chunk.first_character_index}:{chunk.last_character_index}]")
+            print(
+                f"{i+1}. {chunk.file_path} "
+                f"[Chars {chunk.first_character_index}"
+                f":{chunk.last_character_index}]"
+            )
 
     def search_dataset(self,
                        dataset_path: str,
@@ -101,7 +117,7 @@ class RAGCLI:
 
         # 2. Generate
         gen = Generator()
-        temp_id = str(uuid.uuid4())  # Generate a fake UUID since there's no dataset
+        temp_id = str(uuid.uuid4())  # fake UUID; no dataset available
         answer_obj = gen.generate_answer(
             question_id=temp_id,
             query=query,
@@ -127,7 +143,10 @@ class RAGCLI:
 
     def evaluate(self, student_results_path: str, dataset_path: str,
                  k: int = 10, max_context_length: int = 2000) -> None:
-        """Evaluates student search results against the ground truth using custom Recall@k."""
+        """
+        Evaluates student search results against ground truth
+        using custom Recall@k.
+        """
         self.evaluator.evaluate(student_results_path, dataset_path,
                                 k, max_context_length)
 

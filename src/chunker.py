@@ -7,11 +7,11 @@ class BaseChunker:
     """Base class for all chunking strategies."""
 
     def __init__(self, max_chunk_size: int) -> None:
-        """Initializes the chunker with the maximum allowed chunk size in characters."""
+        """Sets the maximum allowed chunk size in characters."""
         self.max_chunk_size = max_chunk_size
 
     def chunk(self, file_path: str, content: str) -> List[MinimalSource]:
-        """Splits file content into MinimalSource chunks. Must be implemented by subclasses."""
+        """Splits content into chunks. Must be implemented by subclasses."""
         raise NotImplementedError("Subclasses must implement this method.")
 
 
@@ -19,7 +19,7 @@ class TextChunker(BaseChunker):
     """Handles Markdown and standard text chunking."""
 
     def chunk(self, file_path: str, content: str) -> List[MinimalSource]:
-        """Splits text greedily at paragraph, line, or word boundaries up to max_chunk_size."""
+        """Splits text at paragraph/line/word boundaries up to max_chunk_size."""
         chunks: List[MinimalSource] = []
         content_length = len(content)
         current_idx = 0
@@ -111,9 +111,10 @@ class CodeChunker(BaseChunker):
 
             # Case B: It is too big, BUT it has a body we can divide more
             elif body:
-                # Emit the header (signature, decorators, leading docstring) before recursing.
-                # Without this, the chars between `def`/`class` and the first body statement
-                # are never stored in any chunk, causing guaranteed recall misses.
+                # Emit the header (signature, decorators, leading
+                # docstring) before recursing. Without this, chars
+                # between `def`/`class` and the first body statement
+                # are never stored in any chunk, causing recall misses.
                 first_child = body[0]
                 fc_ln = getattr(first_child, 'lineno', None)
                 fc_col = getattr(first_child, 'col_offset', None)
@@ -128,12 +129,20 @@ class CodeChunker(BaseChunker):
                                 last_character_index=first_body_start))
                         else:
                             txt_chunks = TextChunker(self.max_chunk_size)
-                            node_text = content[absolute_start:first_body_start]
+                            node_text = content[
+                                absolute_start:first_body_start
+                            ]
                             for c in txt_chunks.chunk(file_path, node_text):
+                                start = (
+                                    c.first_character_index + absolute_start
+                                )
+                                end = (
+                                    c.last_character_index + absolute_start
+                                )
                                 chunks.append(MinimalSource(
                                     file_path=file_path,
-                                    first_character_index=c.first_character_index + absolute_start,
-                                    last_character_index=c.last_character_index + absolute_start))
+                                    first_character_index=start,
+                                    last_character_index=end))
                 for child_node in body:
                     chunks.extend(self._process_node(child_node,
                                                      content,
@@ -145,13 +154,17 @@ class CodeChunker(BaseChunker):
                 txt_chunks = TextChunker(self.max_chunk_size)
                 node_content = content[absolute_start:absolute_end]
                 relative_chunks = txt_chunks.chunk(file_path, node_content)
-                # TextChunker indices are relative to node_content (starts at 0),
-                # so we shift them back to absolute file positions.
+                # TextChunker indices are relative to node_content
+                # (0-based); shift back to absolute file positions.
                 chunks = [
                     MinimalSource(
                         file_path=c.file_path,
-                        first_character_index=c.first_character_index + absolute_start,
-                        last_character_index=c.last_character_index + absolute_start
+                        first_character_index=(
+                            c.first_character_index + absolute_start
+                        ),
+                        last_character_index=(
+                            c.last_character_index + absolute_start
+                        )
                     )
                     for c in relative_chunks
                 ]
@@ -168,7 +181,7 @@ class CodeChunker(BaseChunker):
         return chunks
 
     def chunk(self, file_path: str, content: str) -> List[MinimalSource]:
-        """Parses the file as Python AST and chunks top-level nodes recursively."""
+        """Parses file as Python AST and chunks top-level nodes recursively."""
         line_starts = self._line_start_helper(content)
         tree = ast.parse(content)
         return (self._process_node(tree, content, line_starts, file_path))

@@ -1,7 +1,12 @@
 import os
 import json
 from typing import Optional
-from src.models import RagDataset, StudentSearchResults, StudentSearchResultsAndAnswer, MinimalSearchResults
+from src.models import (
+    RagDataset,
+    StudentSearchResults,
+    StudentSearchResultsAndAnswer,
+    MinimalSearchResults
+)
 from src.indexer import Indexer
 from src.generator import Generator
 from tqdm import tqdm
@@ -10,8 +15,13 @@ from tqdm import tqdm
 class BatchProcessor:
     """Runs search and answer generation over a full dataset of questions."""
 
-    def __init__(self, search_engine: Optional[Indexer], generator: Optional[Generator] = None) -> None:
-        """Stores the retrieval engine and optional LLM generator for batch operations."""
+    def __init__(self,
+                 search_engine: Optional[Indexer],
+                 generator: Optional[Generator] = None) -> None:
+        """
+        Stores the retrieval engine and optional
+        LLM generator for batch operations.
+        """
         self.search_engine = search_engine
         self.generator = generator
 
@@ -37,7 +47,9 @@ class BatchProcessor:
             return
 
         if self.search_engine is None:
-            raise RuntimeError("search_engine is None — cannot run search_dataset.")
+            raise RuntimeError(
+                "search_engine is None — cannot run search_dataset."
+            )
 
         dataset = RagDataset(**raw_data)
         results_list = []
@@ -72,7 +84,11 @@ class BatchProcessor:
 
         print(f"Search dataset complete! Saved to {full_save_path}")
 
-    def answer_dataset(self, student_search_results_path: str, save_directory: str) -> None:
+    def answer_dataset(
+        self,
+        student_search_results_path: str,
+        save_directory: str
+    ) -> None:
         """
         Reads search results, generates an answer for each
         and saves the final output.

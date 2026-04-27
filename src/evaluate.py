@@ -26,7 +26,10 @@ class Evaluator:
             return
 
         # 2. Map ground truth sources by question_id for quick lookup
-        truth_map = {q['question_id']: q['sources'] for q in ground_truth_data['rag_questions']}
+        truth_map = {
+            q['question_id']: q['sources']
+            for q in ground_truth_data['rag_questions']
+        }
 
         total_recall = 0.0
         total_precision = 0.0
@@ -53,16 +56,27 @@ class Evaluator:
                     if exp['file_path'] == pred['file_path']:
 
                         # 1. Calculate Intersection (Overlap)
-                        overlap_start = max(exp['first_character_index'], pred['first_character_index'])
-                        overlap_end = min(exp['last_character_index'], pred['last_character_index'])
+                        overlap_start = max(
+                            exp['first_character_index'],
+                            pred['first_character_index']
+                        )
+                        overlap_end = min(
+                            exp['last_character_index'],
+                            pred['last_character_index']
+                        )
                         overlap_len = max(0, overlap_end - overlap_start)
 
                         # 2. Calculate expected source length
-                        exp_len = exp['last_character_index'] - exp['first_character_index']
+                        exp_len = (
+                            exp['last_character_index']
+                            - exp['first_character_index']
+                        )
 
                         # 3. Check against the 5% overlap threshold
-                        # (overlap relative to expected source length, as per subject)
-                        overlap_ratio = overlap_len / exp_len if exp_len > 0 else 0.0
+                        # (relative to expected source length)
+                        overlap_ratio = (
+                            overlap_len / exp_len if exp_len > 0 else 0.0
+                        )
                         if overlap_ratio >= 0.05:
                             is_found = True
                             break
@@ -79,11 +93,22 @@ class Evaluator:
             for pred in pred_sources:
                 for exp in expected_sources:
                     if exp['file_path'] == pred['file_path']:
-                        overlap_start = max(exp['first_character_index'], pred['first_character_index'])
-                        overlap_end = min(exp['last_character_index'], pred['last_character_index'])
+                        overlap_start = max(
+                            exp['first_character_index'],
+                            pred['first_character_index']
+                        )
+                        overlap_end = min(
+                            exp['last_character_index'],
+                            pred['last_character_index']
+                        )
                         overlap_len = max(0, overlap_end - overlap_start)
-                        exp_len = exp['last_character_index'] - exp['first_character_index']
-                        overlap_ratio = overlap_len / exp_len if exp_len > 0 else 0.0
+                        exp_len = (
+                            exp['last_character_index']
+                            - exp['first_character_index']
+                        )
+                        overlap_ratio = (
+                            overlap_len / exp_len if exp_len > 0 else 0.0
+                        )
                         if overlap_ratio >= 0.05:
                             relevant_retrieved += 1
                             break
