@@ -95,9 +95,28 @@ class CodeChunker(BaseChunker):
         if (lineno is not None and end_lineno is not None and
                 col_offset is not None and end_col_offset is not None):
 
+        # --- THE FIX: Handle Decorators ---
+            # AST nodes often point to the `def`/`class` keyword. We must explicitly 
+            # check the decorator_list to find the true semantic start of the code block.
+            decorator_list = getattr(node, 'decorator_list', [])
+            if decorator_list:
+                first_dec = decorator_list[0]
+                dec_ln = getattr(first_dec, 'lineno', lineno)
+                dec_col = getattr(first_dec, 'col_offset', col_offset)
+                
+                # If the decorator starts earlier, update our target coordinates
+                if dec_ln < lineno or (dec_ln == lineno and dec_col < col_offset):
+                    lineno = dec_ln
+                    col_offset = dec_col
+
             # 2. Calculate absolute start and end indices using line_starts
             absolute_start = line_starts[lineno - 1] + col_offset
             absolute_end = line_starts[end_lineno - 1] + end_col_offset
+
+            # In Python's AST, a decorator's col_offset points to its name (e.g., 'property'),
+            # missing the physical '@' symbol. We step backward by 1 to capture it.
+            if decorator_list and absolute_start > 0 and content[absolute_start - 1] == '@':
+                absolute_start -= 1
 
             node_length = absolute_end - absolute_start
 

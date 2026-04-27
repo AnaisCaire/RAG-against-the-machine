@@ -40,8 +40,7 @@ class Generator:
         prompt = ("Please answer the user's question based ONLY"
                   "on the following context:\n\n")
 
-        # Qwen3-0.6B is a small model — more context hurts accuracy ("lost in the middle")
-        # 1500 chars from 3 sources is the empirical sweet spot for this model size.
+        # too much context and answers get worse... this is sweet spot:
         max_content_chars = 1500
         current_char = 0
 
@@ -54,7 +53,8 @@ class Generator:
                 chunk_text = content[source.first_character_index:
                                      source.last_character_index]
 
-                chunk_str = f"--- SOURCE FILE: {source.file_path} ---\n{chunk_text}\n\n"
+                chunk_str = (f"--- SOURCE FILE: {source.file_path}"
+                             f"---\n{chunk_text}\n\n")
 
                 if current_char + len(chunk_str) > max_content_chars:
                     break
@@ -104,7 +104,8 @@ class Generator:
 
         input_length = inputs["input_ids"].shape[1]
         generated_tokens = outputs[0][input_length:]
-        decoded = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+        decoded = self.tokenizer.decode(generated_tokens,
+                                        skip_special_tokens=True)
         expanded_keywords = decoded if isinstance(decoded, str) else decoded[0]
         expanded_keywords = expanded_keywords.strip()
 
@@ -162,7 +163,6 @@ class Generator:
             add_generation_prompt=True,
             enable_thinking=False
         )
-        # b. tokenize the string → BatchEncoding with input_ids + attention_mask
         inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
         # c. Generate (no_grad = no memory tracking)
         with torch.no_grad():
@@ -172,11 +172,12 @@ class Generator:
                 do_sample=False,
                 pad_token_id=self.tokenizer.eos_token_id
             )
-        # d. Decode only the newly generated tokens
+        #  Decode only the newly generated tokens
         input_length = inputs["input_ids"].shape[1]
         generated_tokens = outputs[0][input_length:]
 
-        decoded = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+        decoded = self.tokenizer.decode(generated_tokens,
+                                        skip_special_tokens=True)
         raw_answer_string = decoded if isinstance(decoded, str) else decoded[0]
         raw_answer_string = raw_answer_string.strip()
         # Fallback cleanup just in case the model ignores the instruction

@@ -46,8 +46,6 @@ class Indexer:
                         chunk.first_character_index:
                         chunk.last_character_index
                     ]
-                    # Prepend filename so BM25/FAISS can discriminate
-                    # by file when many share boilerplate patterns.
                     corpus.append(f"{filename}\n{chunk_text}")
 
             except Exception:
@@ -127,7 +125,7 @@ class Indexer:
 
         print("Load complete!")
 
-    def search(self, query: str, k: int = 5) -> List[MinimalSource]:
+    def search(self, query: str, k: int = 5, debug: bool = False) -> List[MinimalSource]:
         """
         Searches the index and returns the top-k chunks.
         Fuses BM25 and semantic rankings via Reciprocal Rank Fusion.
@@ -145,6 +143,11 @@ class Indexer:
         docs, _ = self.bm25_retriever.retrieve(token_q, k=k * CANDIDATE_MULT)
         bm25_results = [self.corpus_chunks[ticket] for ticket in docs[0]]
 
+        if debug:
+            print("\n--- BM25 top 5 ---")
+            for i, c in enumerate(bm25_results[:5]):
+                print(f"  [{i}] {c.file_path} chars {c.first_character_index}-{c.last_character_index}")
+
         if self.faiss_index is None:
             raise RuntimeError(
                 "FAISS index not loaded. "
@@ -158,6 +161,11 @@ class Indexer:
         semantic_results = [
             self.corpus_chunks[idx] for idx in indices[0] if idx != -1
         ]
+
+        if debug:
+            print("\n--- FAISS top 5 ---")
+            for i, c in enumerate(semantic_results[:5]):
+                print(f"  [{i}] {c.file_path} chars {c.first_character_index}-{c.last_character_index}")
 
         # Reciprocal Rank Fusion (RRF)
         def chunk_id(c: MinimalSource) -> str:

@@ -4043,11 +4043,6 @@
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/docs/design/p2p_nccl_connector.md",
-                    "first_character_index": 11638,
-                    "last_character_index": 12403
-                },
-                {
-                    "file_path": "data/raw/vllm-0.10.1/docs/design/p2p_nccl_connector.md",
                     "first_character_index": 0,
                     "last_character_index": 296
                 },
@@ -4068,8 +4063,18 @@
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/docs/design/p2p_nccl_connector.md",
+                    "first_character_index": 11638,
+                    "last_character_index": 12403
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/design/p2p_nccl_connector.md",
                     "first_character_index": 12403,
                     "last_character_index": 13168
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/design/p2p_nccl_connector.md",
+                    "first_character_index": 14116,
+                    "last_character_index": 14882
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/docs/design/p2p_nccl_connector.md",
@@ -4080,11 +4085,6 @@
                     "file_path": "data/raw/vllm-0.10.1/docs/design/p2p_nccl_connector.md",
                     "first_character_index": 16413,
                     "last_character_index": 17391
-                },
-                {
-                    "file_path": "data/raw/vllm-0.10.1/docs/design/p2p_nccl_connector.md",
-                    "first_character_index": 15648,
-                    "last_character_index": 16413
                 }
             ]
         },
