@@ -23,12 +23,26 @@ class IngestionEngine:
         """Ingests only .md and .txt files."""
         all_chunks: List[MinimalSource] = []
 
+        # FIX 2: exclude noise directories that contain no ground-truth sources
+        # but pollute the index (sonnets, pip requirements, test prompts, CI
+        # scripts). These were 315 of 1199 chunks (~26% noise) and caused ~10%
+        # of queries to have a noise file in their top-5 results.
+        _EXCLUDE_DIRS = {
+            'benchmarks', 'examples', 'tests', '.buildkite', 'requirements',
+        }
+
         doc_files = [
             os.path.join(dirpath, filename)
-            for dirpath, _, filenames in os.walk(root_dir)
+            for dirpath, dirnames, filenames in os.walk(root_dir)
             for filename in filenames
-            if filename.endswith(('.md', '.txt'))
-            or (filename.endswith('.py') and dirpath == root_dir)
+            if (
+                filename.endswith(('.md', '.txt'))
+                or (filename.endswith('.py') and dirpath == root_dir)
+            )
+            and not any(
+                part in _EXCLUDE_DIRS
+                for part in dirpath.split(os.sep)
+            )
         ]
 
         for file_path in tqdm(doc_files, desc="Ingesting docs"):

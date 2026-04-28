@@ -8,27 +8,34 @@ RAG-against-the-machine: hybrid BM25 + FAISS semantic retrieval over the vLLM-0.
 
 Tech stack: bm25s, sentence-transformers (all-MiniLM-L6-v2), faiss-cpu, Qwen/Qwen3-0.6B, Python Fire CLI, pydantic v2, uv package manager.
 
-## Current recall (as of 2026-04-27 latest moulinette run)
-- Docs Recall@5: 0.77 (threshold 0.80) — FAIL by 3 questions
-- Code Recall@5: 0.43 (threshold 0.50) — FAIL by 7 questions
-- Moulinette evaluates at Recall@5 (not @10); uses IoU >= 5% to count a hit
+## Current recall (2026-04-28 analysis)
+- Docs Recall@5: 0.87 on private dataset (threshold 0.80) — PASS
+- Code Recall@5: PASS (>= 50%)
+- Target: ~95% docs Recall@5
+- Local simulation on public dataset: 83/100 = 83% (consistent with 87% private)
+- CANDIDATE_MULT=20 and docs_chunk_size=1200 are the current live params
 
-## Index stats
-- Docs index: 736 chunks, median 1790 chars, max_chunk_size=2000
-- Code index: 46290 chunks across 849 files, max_chunk_size=2000
+## Index stats (current)
+- Docs index: 1199 chunks, mean 951 chars, median 1068 chars, max 1200 chars
+- File contamination: benchmarks/, examples/, tests/, requirements/, .buildkite/ dirs all included in docs index — 33 noisy files
+- Basename collisions: 124 unique basenames shared across multiple paths (README.md = 32 different files, 138 chunks)
+- Corpus text format: "{basename}\n{chunk_text}" — LOSES path info, destroys BM25 disambiguation
 
-## Diagnosed root causes (ranked by impact)
-1. CodeChunker Case B drops function/class HEADER when recursing into body — creates hard coverage gaps. 9 code questions have zero indexable chunk (irrecoverable miss). Fix: emit header chunk from node_start to first-body-child-start before recursing.
-2. /benchmarks/ filter in __main__.py lines 34-38 also catches vllm/benchmarks/throughput.py — 1 code question permanently excluded.
-3. CANDIDATE_MULT=4 in indexer.search() means only top-40 BM25 + top-40 FAISS enter RRF out of 46290 chunks. 6 code + 7 docs questions land at rank 6-10 (outside the @5 evaluation window). Fix: raise to 10.
-4. setup.py not in docs index (ingest_docs only takes .md/.txt) — 1 docs question miss.
-5. 2 docs expected sources are 21-22 chars: with chunk_size=2000 max achievable IoU is ~1%, below the 5% threshold. Structurally irrecoverable unless chunk_size <= 440.
-6. 42 code questions have a valid chunk in index but it doesn't rank in top-5 — due to 46k boilerplate-heavy code chunks overwhelming BM25 IDF.
+## Diagnosed failure modes for docs (17 failures on public dataset)
+1. RANKING failure (not coverage): 100% of GT spans are covered by at least one chunk in index
+2. Small GT spans (74-162 chars) — semantic embedding too dilute for recall; BM25 can find them (rank 1) but RRF fails when semantic rank=None
+3. Markdown table GT spans — no semantic signal (pipe-heavy, model name lists); neither BM25 nor semantic can match "tensor parallelism" to a row of model names
+4. Noise files (.buildkite, benchmarks) appearing in top-5 for 10% of queries, displacing true results
+5. DSE-Qwen2-MRL: BM25 rank=1, semantic rank=6 — RRF fusion not boosting BM25 winner enough when semantic fails
+6. Very large GT spans (1849-1997 chars) split across two 1200-char chunks — best chunk only covers 38-39% of GT span. Overlap threshold is 5%, so technically passes; but getting the RIGHT chunk to rank is harder when the relevant content is split
 
-## Moulinette vs evaluate.py discrepancy
-- Moulinette: IoU (intersection/union) >= 5%
-- evaluate.py: overlap/exp_len >= 5% (one-sided ratio, not IoU)
-- For this dataset: zero disagreements found empirically — both agree on every question.
+## Key levers (ranked by expected impact)
+1. Embedding model upgrade: all-MiniLM-L6-v2 (384d) → all-mpnet-base-v2 (768d): +6-8% semantic recall; benchmarks at 19.9s for 1199 chunks (well within 300s index budget)
+2. Relative file path in corpus: "docs/features/lora.md\n{text}" instead of "lora.md\n{text}" — fixes 124 basename collision families for BM25
+3. Noise file filtering: exclude benchmarks/, examples/, tests/, .buildkite/, requirements/ from docs index — removes 33 noisy files
+4. BM25 boost for small GT spans: lower RRF k from 60 → 30 to amplify rank-1 BM25 hits
+5. Chunk overlap: helps with large GT spans (1849-1997 chars split at 1200 boundary)
+6. Header injection: prepend nearest Markdown H1/H2/H3 to every chunk — helps table-only chunks get matched
 
-**Why:** Failing moulinette thresholds.
-**How to apply:** Use moulinette numbers as ground truth; local evaluate.py scores may differ from production.
+**Why:** Failing moulinette 95% target for docs.
+**How to apply:** Every change must stay within 300s index time and 90s search throughput.

@@ -213,3 +213,22 @@ We also need to control where the computer will save the data and route everythi
     ```bash
     curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/goinfre/$USER/bin" sh
     ```
+
+
+## Evaluation preparation:
+Need to know the difference between all the steps taken:
+Indexing:
+Retrieval:
+Augmenting:
+Generation:
+
+questions:
+What happens if I change the max chunk size on the retrieval performance
+Explain chunking strategies
+
+
+1. "What is Retrieval-Augmented Generation (RAG) and why is it useful?"
+2. "Walk me through your complete RAG pipeline, from raw documents to a generated answer."
+3. "What is the difference between TF-IDF and BM25 as retrieval methods?"
+4. "What implementation choices did you make and why? What trade-offs did you consider?"
+5. "If you had more time, what would you improve in your system?"
