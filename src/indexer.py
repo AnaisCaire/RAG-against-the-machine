@@ -66,7 +66,8 @@ class Indexer:
     def _clean_text(self, text: str) -> str:
         """ Normalize the syntax for better BM25 matching """
         text = re.sub(r'(?<=[a-z0-9])(?=[A-Z])', ' ', text)
-        cleaned = text.replace("_", " ").replace(".", " ")
+        cleaned = (text.replace("_", " ").replace(".", " ")
+                   .replace("-", " ").replace("/", " "))
         return cleaned.lower()
 
     def build_index(self, chunks: List[MinimalSource], is_code: bool) -> None:
@@ -82,6 +83,8 @@ class Indexer:
         print("Building BM25 Index...")
         corpus: List[str] = [self._clean_text(text) for text in raw_corp]
         stopwords = [] if is_code else "en"
+        b = 0.3 if is_code else 0.75
+        self.bm25_retriever = bm25s.BM25(method="bm25+", b=b)
         corpus_tokens = bm25s.tokenize(corpus, stopwords=stopwords)
         self.bm25_retriever.index(corpus_tokens)
 

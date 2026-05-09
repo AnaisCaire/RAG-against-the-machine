@@ -1,6 +1,7 @@
 import ast
 from typing import List
 from src.models import MinimalSource
+from src.config import CHUNK_OVERLAP
 
 
 class BaseChunker:
@@ -52,7 +53,8 @@ class TextChunker(BaseChunker):
                     file_path=file_path,
                     first_character_index=current_idx,
                     last_character_index=absolute_end))
-                current_idx = absolute_end
+                next_idx = absolute_end - CHUNK_OVERLAP
+                current_idx = next_idx if next_idx > current_idx else absolute_end
         return chunks
 
 

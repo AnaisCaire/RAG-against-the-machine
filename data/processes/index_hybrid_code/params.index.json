@@ -1,12 +1,12 @@
 {
     "k1": 1.5,
-    "b": 0.75,
+    "b": 0.3,
     "delta": 0.5,
-    "method": "lucene",
-    "idf_method": "lucene",
+    "method": "bm25+",
+    "idf_method": "bm25+",
     "dtype": "float32",
     "int_dtype": "int32",
-    "num_docs": 49918,
+    "num_docs": 49184,
     "version": "0.3.3",
     "backend": "numpy"
 }

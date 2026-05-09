@@ -6,7 +6,11 @@ import torch
 # Larger = more surrounding context but may dilute relevance.
 MAX_CODE_CHUNK_SIZE: int = 2000
 
-MAX_DOCS_CHUNK_SIZE: int = 2000
+# Characters of overlap between consecutive text chunks.
+# Prevents recall misses when a relevant passage spans a chunk boundary.
+CHUNK_OVERLAP: int = 200
+
+MAX_DOCS_CHUNK_SIZE: int = 1800
 
 # ── Retrieval ─────────────────────────────────────────────────────────────────
 # Number of top results returned to the caller after RRF fusion.
@@ -61,7 +65,7 @@ ENABLE_THINKING: bool = False
 
 # Number of CPU threads used by OpenMP during inference.
 # Setting to "1" prevents oversubscription when running on a single core.
-OMP_NUM_THREADS: str = "1"
+OMP_NUM_THREADS: str = "4"
 
 # ── Prompt construction ───────────────────────────────────────────────────────
 # Maximum total characters of retrieved source text injected into the prompt.
