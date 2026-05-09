@@ -95,7 +95,6 @@ class CodeChunker(BaseChunker):
         if (lineno is not None and end_lineno is not None and
                 col_offset is not None and end_col_offset is not None):
 
-        # --- THE FIX: Handle Decorators ---
             # AST nodes often point to the `def`/`class` keyword. We must explicitly 
             # check the decorator_list to find the true semantic start of the code block.
             decorator_list = getattr(node, 'decorator_list', [])
@@ -109,7 +108,7 @@ class CodeChunker(BaseChunker):
                     lineno = dec_ln
                     col_offset = dec_col
 
-            # 2. Calculate absolute start and end indices using line_starts
+            # 2. Calculate absolute start and end indices
             absolute_start = line_starts[lineno - 1] + col_offset
             absolute_end = line_starts[end_lineno - 1] + end_col_offset
 
@@ -120,7 +119,7 @@ class CodeChunker(BaseChunker):
 
             node_length = absolute_end - absolute_start
 
-            # 3. The Size Decision Engine
+            # The Size Decision Engine
             # Case A: It fits perfectly!
             if node_length <= self.max_chunk_size:
                 chunks.append(MinimalSource(

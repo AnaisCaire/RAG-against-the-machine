@@ -2,9 +2,11 @@ import os
 import re
 import bm25s
 import json
+import torch
 from typing import List, Dict, Optional
 from collections import defaultdict
 from src.models import MinimalSource
+from src.config import EMBEDDING_MODEL, EMBEDDING_BATCH_SIZE, CANDIDATE_MULT, RRF_CONSTANT, DEFAULT_K
 import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
@@ -20,12 +22,15 @@ class Indexer:
 
         self.bm25_retriever = bm25s.BM25()
 
-        print("Loading Semantic Embedding Model")
-        # FIX 1: upgraded from all-MiniLM-L6-v2 (384-dim, MTEB~56) to
-        # all-mpnet-base-v2 (768-dim, MTEB~65) for ~5-8% recall gain.
-        # Stays well within the 300s indexing budget.
+        self.device: str = (
+            "cuda" if torch.cuda.is_available()
+            else "mps" if torch.backends.mps.is_available()
+            else "cpu"
+        )
+        print(f"Loading Semantic Embedding Model on {self.device}")
+
         self.embedding_model: SentenceTransformer = SentenceTransformer(
-            'all-mpnet-base-v2'
+            EMBEDDING_MODEL, device=self.device
         )
         self.faiss_index: Optional[faiss.IndexFlatIP] = None
 
@@ -59,7 +64,7 @@ class Indexer:
         return corpus
 
     def _clean_text(self, text: str) -> str:
-        """ Normalize the syntax for better BM25 matching"""
+        """ Normalize the syntax for better BM25 matching """
         text = re.sub(r'(?<=[a-z0-9])(?=[A-Z])', ' ', text)
         cleaned = text.replace("_", " ").replace(".", " ")
         return cleaned.lower()
@@ -86,6 +91,7 @@ class Indexer:
         )
         embeddings = self.embedding_model.encode(
             raw_corp,
+            batch_size=EMBEDDING_BATCH_SIZE,
             show_progress_bar=True,
             normalize_embeddings=True)
         dimension = embeddings.shape[1]
@@ -128,7 +134,7 @@ class Indexer:
 
         print("Load complete!")
 
-    def search(self, query: str, k: int = 5, debug: bool = False) -> List[MinimalSource]:
+    def search(self, query: str, k: int = DEFAULT_K, debug: bool = False) -> List[MinimalSource]:
         """
         Searches the index and returns the top-k chunks.
         Fuses BM25 and semantic rankings via Reciprocal Rank Fusion.
@@ -137,8 +143,6 @@ class Indexer:
             return []
         if not query or not query.strip():
             return []
-
-        CANDIDATE_MULT = 20
 
         clean_q = self._clean_text(query)
         stopwords = [] if self.is_code else "en"
@@ -180,12 +184,12 @@ class Indexer:
         for rank, chunk in enumerate(bm25_results):
             cid = chunk_id(chunk)
             chunk_lookup[cid] = chunk
-            rrf_scores[cid] += 1.0 / (60 + rank + 1)
+            rrf_scores[cid] += 1.0 / (RRF_CONSTANT + rank + 1)
 
         for rank, chunk in enumerate(semantic_results):
             cid = chunk_id(chunk)
             chunk_lookup[cid] = chunk
-            rrf_scores[cid] += 1.0 / (60 + rank + 1)
+            rrf_scores[cid] += 1.0 / (RRF_CONSTANT + rank + 1)
 
         sorted_ids = sorted(
             rrf_scores, key=lambda x: rrf_scores[x], reverse=True

@@ -1,4 +1,5 @@
 import json
+from src.config import EVAL_K, OVERLAP_THRESHOLD, DOCS_PASS_THRESHOLD, CODE_PASS_THRESHOLD
 
 
 class Evaluator:
@@ -8,7 +9,7 @@ class Evaluator:
     """
 
     def evaluate(self, student_results_path: str, dataset_path: str,
-                 k: int = 10, max_context_length: int = 2000) -> None:
+                 k: int = EVAL_K, max_context_length: int = 2000) -> None:
         """
         Evaluates student search results against the ground
         truth using Recall@k.
@@ -77,7 +78,7 @@ class Evaluator:
                         overlap_ratio = (
                             overlap_len / exp_len if exp_len > 0 else 0.0
                         )
-                        if overlap_ratio >= 0.05:
+                        if overlap_ratio >= OVERLAP_THRESHOLD:
                             is_found = True
                             break
 
@@ -109,14 +110,13 @@ class Evaluator:
                         overlap_ratio = (
                             overlap_len / exp_len if exp_len > 0 else 0.0
                         )
-                        if overlap_ratio >= 0.05:
+                        if overlap_ratio >= OVERLAP_THRESHOLD:
                             relevant_retrieved += 1
                             break
 
             question_precision = relevant_retrieved / k if k > 0 else 0.0
             total_precision += question_precision
 
-        # 4. Final System Score
         final_recall = total_recall / num_questions
         final_precision = total_precision / num_questions
 
@@ -124,14 +124,13 @@ class Evaluator:
         print(f"Recall@{k}: {final_recall:.3f}")
         print(f"Precision@{k}: {final_precision:.3f}")
 
-        # Dynamically check the threshold based on the filename
         if "docs" in dataset_path:
-            if final_recall >= 0.80:
-                print("✅ PASS! You achieved >= 80% on the docs dataset.")
+            if final_recall >= DOCS_PASS_THRESHOLD:
+                print(f"✅ PASS! You achieved >= {DOCS_PASS_THRESHOLD:.0%} on the docs dataset.")
             else:
-                print("❌ FAIL. You are below the 80% docs threshold.")
+                print(f"❌ FAIL. You are below the {DOCS_PASS_THRESHOLD:.0%} docs threshold.")
         elif "code" in dataset_path:
-            if final_recall >= 0.50:
-                print("✅ PASS! You achieved >= 50% on the code dataset.")
+            if final_recall >= CODE_PASS_THRESHOLD:
+                print(f"✅ PASS! You achieved >= {CODE_PASS_THRESHOLD:.0%} on the code dataset.")
             else:
-                print("❌ FAIL. You are below the 50% code threshold.")
+                print(f"❌ FAIL. You are below the {CODE_PASS_THRESHOLD:.0%} code threshold.")

@@ -2,29 +2,42 @@ import os
 from typing import Any, List
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from src.models import MinimalSource, MinimalAnswer
+from src.config import (
+    OMP_NUM_THREADS,
+    LLM_MODEL_NAME,
+    LLM_DTYPE,
+    MAX_NEW_TOKENS_EXPAND,
+    MAX_NEW_TOKENS_ANSWER,
+    ENABLE_THINKING,
+    MAX_CONTEXT_CHARS,
+    MAX_CONTEXT_SOURCES,
+)
 import torch
 
-os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = OMP_NUM_THREADS
 
 
 class Generator:
-    """Wraps a local Qwen LLM for query expansion and RAG answer generation."""
+    """
+    Wraps a local Qwen LLM for query expansion and RAG answer generation.
+    """
 
     def __init__(self) -> None:
-        """Loads the Qwen model and tokenizer onto the best available device."""
+        """
+        loads the Qwen model and tokenizer on best available device.
+        """
         self.device: str = (
             "cuda" if torch.cuda.is_available()
             else "mps" if torch.backends.mps.is_available()
             else "cpu"
         )
 
-        print(f"Device selected: {self.device}")
+        print(f"\nDevice selected: {self.device}\n")
 
-        model_name = "Qwen/Qwen3-0.6B"
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME)
         self.model: Any = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            dtype=torch.float32,
+            LLM_MODEL_NAME,
+            dtype=LLM_DTYPE,
         ).to(self.device)  # type: ignore[arg-type]
         self.model.eval()
         self.answer_cache: dict[str, str] = {}
@@ -40,11 +53,10 @@ class Generator:
         prompt = ("Please answer the user's question based ONLY"
                   "on the following context:\n\n")
 
-        # too much context and answers get worse... this is sweet spot:
-        max_content_chars = 1500
+        max_content_chars = MAX_CONTEXT_CHARS
         current_char = 0
 
-        for source in retrieved_sources[:3]:
+        for source in retrieved_sources[:MAX_CONTEXT_SOURCES]:
             try:
                 if source.file_path not in self._file_cache:
                     with open(source.file_path, 'r', encoding='utf-8') as f:
@@ -91,13 +103,13 @@ class Generator:
             messages,
             tokenize=False,
             add_generation_prompt=True,
-            enable_thinking=False
+            enable_thinking=ENABLE_THINKING
         )
         inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
-                max_new_tokens=50,  # Keep it very short and fast
+                max_new_tokens=MAX_NEW_TOKENS_EXPAND,
                 do_sample=False,
                 pad_token_id=self.tokenizer.eos_token_id
             )
@@ -112,7 +124,6 @@ class Generator:
         if "</think>" in expanded_keywords:
             expanded_keywords = expanded_keywords.split("</think>")[-1].strip()
 
-        # We return the original query PLUS the LLM's guessed keywords!
         return f"{query} {expanded_keywords}"
 
     def generate_answer(self,
@@ -161,18 +172,18 @@ class Generator:
             messages,
             tokenize=False,
             add_generation_prompt=True,
-            enable_thinking=False
+            enable_thinking=ENABLE_THINKING
         )
         inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
-        # c. Generate (no_grad = no memory tracking)
+        # Generate (no_grad = no memory tracking)
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
-                max_new_tokens=40,
+                max_new_tokens=MAX_NEW_TOKENS_ANSWER,
                 do_sample=False,
                 pad_token_id=self.tokenizer.eos_token_id
             )
-        #  Decode only the newly generated tokens
+        # Decode only the newly generated tokens
         input_length = inputs["input_ids"].shape[1]
         generated_tokens = outputs[0][input_length:]
 
@@ -184,7 +195,7 @@ class Generator:
         if "</think>" in raw_answer_string:
             raw_answer_string = raw_answer_string.split("</think>")[-1].strip()
         self.answer_cache[query] = raw_answer_string
-        # 4. Package everything into the MinimalAnswer Pydantic model
+        # Package everything into the MinimalAnswer Pydantic model
         return MinimalAnswer(
             question_id=question_id,
             question_str=query,
