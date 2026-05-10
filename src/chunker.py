@@ -39,8 +39,11 @@ class TextChunker(BaseChunker):
                 break
             else:
                 node_text = content[current_idx:max_end]
-                if node_text.rfind('\n\n') >= 0:
-                    break_index = node_text.rfind('\n\n') + 2
+                heading_pos = node_text.rfind('\n#')
+                paragraph_pos = node_text.rfind('\n\n')
+                best_semantic = max(heading_pos, paragraph_pos)
+                if best_semantic >= 0:
+                    break_index = best_semantic + 1
                 elif node_text.rfind('\n') >= 0:
                     break_index = node_text.rfind('\n') + 1
                 elif node_text.rfind(' ') >= 0:

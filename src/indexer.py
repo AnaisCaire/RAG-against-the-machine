@@ -54,7 +54,29 @@ class Indexer:
                         chunk.first_character_index:
                         chunk.last_character_index
                     ]
-                    corpus.append(f"{filename}\n{chunk_text}")
+                    if self.is_code:
+                        path_prefix = ' '.join(
+                            self._extract_path_tokens(filename) * 3
+                        )
+                        corpus.append(f"{path_prefix}\n{chunk_text}")
+                    else:
+                        stem = os.path.splitext(os.path.basename(filename))[0]
+                        stem_tokens = [t for t in re.split(r'[_\-]', stem)
+                                       if len(t) > 1]
+                        stem_boost = (' '.join(stem_tokens * 2) + '\n'
+                                      ) if stem_tokens else ''
+                        heading = self._find_nearest_heading(
+                            content, chunk.first_character_index
+                        )
+                        header_boost = f"{heading}\n{heading}\n" if heading else ""
+                        table_header = self._find_table_header(
+                            content, chunk.first_character_index, chunk_text
+                        )
+                        table_boost = f"{table_header}\n" if table_header else ""
+                        corpus.append(
+                            f"{stem_boost}{filename}\n"
+                            f"{header_boost}{table_boost}{chunk_text}"
+                        )
 
             except Exception:
                 print(
@@ -70,6 +92,62 @@ class Indexer:
                    .replace("-", " ").replace("/", " "))
         return cleaned.lower()
 
+    def _clean_code_text(self, text: str) -> str:
+        """Extract only identifiers from code for cleaner BM25 token signal."""
+        tokens = re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', text)
+        result = []
+        for token in tokens:
+            # camelCase split BEFORE lowercasing
+            parts = re.sub(r'(?<=[a-z0-9])(?=[A-Z])', ' ', token).split()
+            for part in parts:
+                for subpart in part.split('_'):
+                    if len(subpart) > 1:
+                        result.append(subpart.lower())
+        return ' '.join(result)
+
+    @staticmethod
+    def _extract_path_tokens(file_path: str) -> List[str]:
+        """Split a file path into lowercase BM25-friendly tokens."""
+        return [p.lower() for p in re.split(r'[/_\-\.]', file_path)
+                if len(p) > 1]
+
+    @staticmethod
+    def _preprocess_markdown(text: str) -> str:
+        """Strip URL and HTML noise from markdown before BM25 tokenization."""
+        text = re.sub(r'\[([^\]]*)\]\([^\)]*\)', r'\1', text)  # [text](url) → text
+        text = re.sub(r'https?://\S+', ' ', text)               # bare URLs
+        text = re.sub(r'<[^>]+>', ' ', text)                    # HTML tags
+        return text
+
+    @staticmethod
+    def _find_nearest_heading(content: str, char_idx: int) -> str:
+        """Scan backward from char_idx and return the nearest markdown heading text."""
+        for line in reversed(content[:char_idx].split('\n')):
+            stripped = line.strip()
+            if stripped.startswith('#'):
+                return stripped.lstrip('#').strip()
+        return ''
+
+    @staticmethod
+    def _find_table_header(content: str, chunk_start: int, chunk_text: str) -> str:
+        """If chunk contains table rows without a header, return the column header text."""
+        if '|' not in chunk_text:
+            return ''
+        # Chunk already has a separator row — headers are present in this chunk
+        if re.search(r'^\s*\|[\s\-:|]+\|', chunk_text, re.MULTILINE):
+            return ''
+        # Scan backward up to 100 lines for the nearest table separator row
+        lines = content[:chunk_start].split('\n')
+        for i in range(len(lines) - 1, max(-1, len(lines) - 100), -1):
+            if re.match(r'\s*\|[\s\-:|]+\|', lines[i]):
+                if i > 0 and '|' in lines[i - 1]:
+                    cols = [c.strip() for c in lines[i - 1].split('|')
+                            if c.strip() and not re.match(r'^[-:]+$', c.strip())]
+                    if cols:
+                        return ' '.join(cols)
+                break
+        return ''
+
     def build_index(self, chunks: List[MinimalSource], is_code: bool) -> None:
         """
         Extracts text, tokenizes/embeds it, and builds the index.
@@ -81,11 +159,14 @@ class Indexer:
         raw_corp: List[str] = self._make_corpus(chunks)
 
         print("Building BM25 Index...")
-        corpus: List[str] = [self._clean_text(text) for text in raw_corp]
-        stopwords = [] if is_code else "en"
+        if is_code:
+            corpus: List[str] = [self._clean_code_text(text) for text in raw_corp]
+        else:
+            corpus = [self._clean_text(self._preprocess_markdown(text))
+                      for text in raw_corp]
         b = 0.3 if is_code else 0.75
         self.bm25_retriever = bm25s.BM25(method="bm25+", b=b)
-        corpus_tokens = bm25s.tokenize(corpus, stopwords=stopwords)
+        corpus_tokens = bm25s.tokenize(corpus, stopwords="en")
         self.bm25_retriever.index(corpus_tokens)
 
         print(
@@ -147,9 +228,11 @@ class Indexer:
         if not query or not query.strip():
             return []
 
-        clean_q = self._clean_text(query)
-        stopwords = [] if self.is_code else "en"
-        token_q = bm25s.tokenize(clean_q, stopwords=stopwords)
+        if self.is_code:
+            clean_q = self._clean_code_text(query)
+        else:
+            clean_q = self._clean_text(query)
+        token_q = bm25s.tokenize(clean_q, stopwords="en")
         docs, _ = self.bm25_retriever.retrieve(token_q, k=k * CANDIDATE_MULT)
         bm25_results = [self.corpus_chunks[ticket] for ticket in docs[0]]
 
