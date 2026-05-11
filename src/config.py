@@ -1,6 +1,6 @@
 import torch
 
-# ── Chunking 
+# ── Chunking
 
 # Larger = more surrounding context but may dilute relevance.
 MAX_CODE_CHUNK_SIZE: int = 2000
@@ -21,7 +21,7 @@ CANDIDATE_MULT: int = 20
 # Typical alternatives: 1–100.
 RRF_CONSTANT: int = 20
 
-# ── Embedding model 
+# ── Embedding model
 # Sentence-transformer model used to build dense FAISS vectors.
 EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
 
@@ -30,7 +30,7 @@ EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
 # Lower if you run out of memory. Range: 32–512.
 EMBEDDING_BATCH_SIZE: int = 256
 
-# ── LLM / Generator 
+# ── LLM / Generator
 
 LLM_MODEL_NAME: str = "Qwen/Qwen3-0.6B"
 
@@ -47,15 +47,14 @@ MAX_NEW_TOKENS_ANSWER: int = 40
 ENABLE_THINKING: bool = False
 OMP_NUM_THREADS: str = "8"
 
-# ── Prompt construction 
+# ── Prompt construction
 # Maximum total characters of retrieved source text injected into the prompt.
-# At ~4 chars/token this is ~375 tokens — raise to 3000–4000 for richer context.
 MAX_CONTEXT_CHARS: int = 1500
 
 # Maximum number of retrieved sources spliced into the prompt.
 MAX_CONTEXT_SOURCES: int = 3
 
-# ── Evaluation 
+# ── Evaluation
 # k used when computing Recall@k and Precision@k during evaluation.
 EVAL_K: int = 10
 
@@ -63,18 +62,18 @@ OVERLAP_THRESHOLD: float = 0.05
 DOCS_PASS_THRESHOLD: float = 0.80
 CODE_PASS_THRESHOLD: float = 0.50
 
-# ── Ingestion filtering 
+# ── Ingestion filtering
 
 EXCLUDE_DIRS: frozenset = frozenset({
     'benchmarks', 'examples', 'tests', '.buildkite', 'requirements',
 })
 
-# ── Index storage paths 
+# ── Index storage paths
 # Directory containing the raw corpus
 RAW_DATA_DIR: str = "data/raw/vllm-0.10.1"
 
 DOCS_INDEX_DIR: str = "data/processes/index_hybrid_docs"
 CODE_INDEX_DIR: str = "data/processes/index_hybrid_code"
 
-# ── Logging 
+# ── Logging
 LOG_FILE: str = "ingestion_errors.log"

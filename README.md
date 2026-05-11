@@ -85,6 +85,7 @@ the last and first index for the chunking.
     a first_index/last_index from the MinimalSource means.
     we need to find the raw string again...
     with the make_corpus function
+        this function
 
     build_index function:
     https://github.com/xhluca/bm25s 
@@ -108,6 +109,24 @@ the last and first index for the chunking.
 
     this will return a dict/tuple of the highest scoring chunks
     with thoes numerical indexes, we check back our coprus chunks to get the actual Minimalsource object related to thoses values...
+
+    What i had to do to make my model more precise. 
+    OK, so the indexing is very important for making it precise...
+    1. clean code text function:
+        what is really does: def my_function(x=5): becomes a list: ['def', 'my_function', 'x']
+        then, it breaks down the camelCase so: BlockSpaceManager becomes ['Block', 'Space', 'Manager']
+        this is better for searching 
+        same think for the snake_case : get_num_free_blocks becomes ['get', 'num', 'free', 'blocks']
+     2. the length normalisation in BM25 algo:
+        b = 1.0 -> pensalize long documents because it assums its rambling
+        b = 0.0 -> dosent event look at lenght
+        for docs, the reaserch suggests to have b=0.75 
+            if a 2000 word essay mentions coffee once
+            vs a 100 word essay mentions "cofee" once
+            we can assume the 100 word essay is more likely to be relavant
+        for code, a 2000 caracter class is not rambling.
+        if b = 0.75 it will only return the small utility files and not the real code
+        this is a very important distinction to make in the BM25 
 
 ## generator
 
@@ -135,20 +154,6 @@ the last and first index for the chunking.
     - answer_dataset (Chapter V.6.7): Reads the newly created srcSearchResults JSON, passes those pre-found tickets to the LLM, and saves a srcSearchResultsAndAnswer JSON.
 
 
-## accuracy problems
-
-### biggest one:
-    Python chunks: 107,698  (98.4%)
-    Doc chunks:       1,773  (1.6%)
-For any docs question, your index is nearly 99% noise. BM25 has 60× more Python chunks to pick from than docs chunks, so it almost always returns code files first. This accounts for 24 of your 35 failing questions.
-
-You can see it in the output — queries like "What hardware platforms does vLLM support?" return Python test files instead of the relevant .md file.
-
-## What about speed 
-speed was the second biggest issue... for a question to be valid it needs to generate under 2 minutes...
-I had to learn more about the torch library and how to optimize GPU acceleration.
-this article is perfect to understand it:
-https://deepnote.com/blog/ultimate-guide-to-pytorch-library-in-python
 
 ### Bonuses
 
@@ -172,9 +177,13 @@ https://deepnote.com/blog/ultimate-guide-to-pytorch-library-in-python
 
 ## Seamntic Embedding
     2 new concepts:
-        sentence transformers: explain
-        FAISS: explain
-    1 update the inderer.py to have both BM25 and semantic embedding
+        sentence transformers:
+        running a raw text string into a sentence transformer model is actually translating every chunk of text as a dense array of numbers == vectors
+        we also normalize the embeddings to the lenght of 1 so we can calculate the cosine similarity between vectors. 
+        FAISS: facebook AI Similarity Search = the most optimal library
+        this is about building a database and being able to search massive databases of vectors efficiently.
+
+    1 update the indexr.py to have both BM25 and semantic embedding
 
 ## the schools computer problems...
 

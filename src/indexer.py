@@ -6,7 +6,13 @@ import torch
 from typing import List, Dict, Optional
 from collections import defaultdict
 from src.models import MinimalSource
-from src.config import EMBEDDING_MODEL, EMBEDDING_BATCH_SIZE, CANDIDATE_MULT, RRF_CONSTANT, DEFAULT_K
+from src.config import (
+    EMBEDDING_MODEL,
+    EMBEDDING_BATCH_SIZE,
+    CANDIDATE_MULT,
+    RRF_CONSTANT,
+    DEFAULT_K
+)
 import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
@@ -35,16 +41,22 @@ class Indexer:
         self.faiss_index: Optional[faiss.IndexFlatIP] = None
 
     def _make_corpus(self, chunks: List[MinimalSource]) -> List[str]:
-        """converts coordiante-based chunks into readable strings"""
+        """
+        converts coordiante-based chunks into readable strings
+        open the physical files, slice the raw text string with the coords
+        of the minimal source object and return a list of string
+        """
         corpus: List[str] = []
 
         # make a dict of {file_path : [Minimalsource.... , ....]}
+        # resolves massive bottleneck of opening a file once and not 500 times
         dict_chunks: Dict[str, List[MinimalSource]] = defaultdict(list)
         for chunk in chunks:
             dict_chunks[chunk.file_path].append(chunk)
 
         for each_path, file_chunks in dict_chunks.items():
             try:
+                # open the whole file once
                 with open(each_path, 'r', encoding='utf-8') as f:
                     content = f.read()
 
@@ -57,7 +69,7 @@ class Indexer:
                     if self.is_code:
                         path_prefix = ' '.join(
                             self._extract_path_tokens(filename) * 3
-                        )
+                        )  # we want the filename to be 3 times more likely
                         corpus.append(f"{path_prefix}\n{chunk_text}")
                     else:
                         stem = os.path.splitext(os.path.basename(filename))[0]
@@ -65,14 +77,17 @@ class Indexer:
                                        if len(t) > 1]
                         stem_boost = (' '.join(stem_tokens * 2) + '\n'
                                       ) if stem_tokens else ''
+                        # important so filename dosent forget its title
                         heading = self._find_nearest_heading(
                             content, chunk.first_character_index
                         )
-                        header_boost = f"{heading}\n{heading}\n" if heading else ""
+                        header_boost = (f"{heading}\n{heading}\n"
+                                        if heading else "")
                         table_header = self._find_table_header(
                             content, chunk.first_character_index, chunk_text
                         )
-                        table_boost = f"{table_header}\n" if table_header else ""
+                        table_boost = (f"{table_header}\n"
+                                       if table_header else "")
                         corpus.append(
                             f"{stem_boost}{filename}\n"
                             f"{header_boost}{table_boost}{chunk_text}"
@@ -80,7 +95,7 @@ class Indexer:
 
             except Exception:
                 print(
-                    f"Warning: Could not read {each_path} for corpus creation."
+                    f"Warning: Could not read {each_path} for creation."
                 )
 
         return corpus
@@ -93,7 +108,17 @@ class Indexer:
         return cleaned.lower()
 
     def _clean_code_text(self, text: str) -> str:
-        """Extract only identifiers from code for cleaner BM25 token signal."""
+        """
+        Extract only identifiers from code for cleaner BM25 token signal.
+        1. ignore code syntax :
+        def my_function(x=5): becomes a list: ['def', 'my_function', 'x']
+        2. camelCase splitter:
+        BlockSpaceManager becomes ['Block', 'Space', 'Manager']
+        3. snake_case splitter:
+        get_num_free_blocks becomes ['get', 'num', 'free', 'blocks']
+        3. we remove single letters like "i", "j"... to remove noise
+        4. the we standarize it
+        """
         tokens = re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', text)
         result = []
         for token in tokens:
@@ -113,15 +138,21 @@ class Indexer:
 
     @staticmethod
     def _preprocess_markdown(text: str) -> str:
-        """Strip URL and HTML noise from markdown before BM25 tokenization."""
-        text = re.sub(r'\[([^\]]*)\]\([^\)]*\)', r'\1', text)  # [text](url) → text
+        """
+        Strip URL and HTML noise from markdown before BM25 tokenization.
+        """
+        text = re.sub(r'\[([^\]]*)\]\([^\)]*\)', r'\1', text)
         text = re.sub(r'https?://\S+', ' ', text)               # bare URLs
         text = re.sub(r'<[^>]+>', ' ', text)                    # HTML tags
         return text
 
     @staticmethod
     def _find_nearest_heading(content: str, char_idx: int) -> str:
-        """Scan backward from char_idx and return the nearest markdown heading text."""
+        """
+        Scan backward from char_idx and
+        return the nearest markdown heading text.
+        helps giving context to docs
+        """
         for line in reversed(content[:char_idx].split('\n')):
             stripped = line.strip()
             if stripped.startswith('#'):
@@ -129,11 +160,16 @@ class Indexer:
         return ''
 
     @staticmethod
-    def _find_table_header(content: str, chunk_start: int, chunk_text: str) -> str:
-        """If chunk contains table rows without a header, return the column header text."""
+    def _find_table_header(content: str,
+                           chunk_start: int,
+                           chunk_text: str) -> str:
+        """
+        If chunk contains table rows without a header,
+        return the column header text.
+        """
         if '|' not in chunk_text:
             return ''
-        # Chunk already has a separator row — headers are present in this chunk
+        # headers are present in this chunk
         if re.search(r'^\s*\|[\s\-:|]+\|', chunk_text, re.MULTILINE):
             return ''
         # Scan backward up to 100 lines for the nearest table separator row
@@ -142,7 +178,8 @@ class Indexer:
             if re.match(r'\s*\|[\s\-:|]+\|', lines[i]):
                 if i > 0 and '|' in lines[i - 1]:
                     cols = [c.strip() for c in lines[i - 1].split('|')
-                            if c.strip() and not re.match(r'^[-:]+$', c.strip())]
+                            if c.strip() and not re.match(
+                                r'^[-:]+$', c.strip())]
                     if cols:
                         return ' '.join(cols)
                 break
@@ -160,7 +197,8 @@ class Indexer:
 
         print("Building BM25 Index...")
         if is_code:
-            corpus: List[str] = [self._clean_code_text(text) for text in raw_corp]
+            corpus: List[str] = [self._clean_code_text(text)
+                                 for text in raw_corp]
         else:
             corpus = [self._clean_text(self._preprocess_markdown(text))
                       for text in raw_corp]
@@ -218,7 +256,7 @@ class Indexer:
 
         print("Load complete!")
 
-    def search(self, query: str, k: int = DEFAULT_K, debug: bool = False) -> List[MinimalSource]:
+    def search(self, query: str, k: int = DEFAULT_K) -> List[MinimalSource]:
         """
         Searches the index and returns the top-k chunks.
         Fuses BM25 and semantic rankings via Reciprocal Rank Fusion.
@@ -232,14 +270,10 @@ class Indexer:
             clean_q = self._clean_code_text(query)
         else:
             clean_q = self._clean_text(query)
+
         token_q = bm25s.tokenize(clean_q, stopwords="en")
         docs, _ = self.bm25_retriever.retrieve(token_q, k=k * CANDIDATE_MULT)
         bm25_results = [self.corpus_chunks[ticket] for ticket in docs[0]]
-
-        if debug:
-            print("\n--- BM25 top 5 ---")
-            for i, c in enumerate(bm25_results[:5]):
-                print(f"  [{i}] {c.file_path} chars {c.first_character_index}-{c.last_character_index}")
 
         if self.faiss_index is None:
             raise RuntimeError(
@@ -255,18 +289,14 @@ class Indexer:
             self.corpus_chunks[idx] for idx in indices[0] if idx != -1
         ]
 
-        if debug:
-            print("\n--- FAISS top 5 ---")
-            for i, c in enumerate(semantic_results[:5]):
-                print(f"  [{i}] {c.file_path} chars {c.first_character_index}-{c.last_character_index}")
-
         # Reciprocal Rank Fusion (RRF)
         def chunk_id(c: MinimalSource) -> str:
+            """create a unique ID for every chunk so i can track them"""
             return f"{c.file_path}_{c.first_character_index}"
 
         rrf_scores: Dict[str, float] = defaultdict(float)
         chunk_lookup: Dict[str, MinimalSource] = {}
-
+        # RRF algo.
         for rank, chunk in enumerate(bm25_results):
             cid = chunk_id(chunk)
             chunk_lookup[cid] = chunk
@@ -276,7 +306,7 @@ class Indexer:
             cid = chunk_id(chunk)
             chunk_lookup[cid] = chunk
             rrf_scores[cid] += 1.0 / (RRF_CONSTANT + rank + 1)
-
+        # if chunk was found in both then its at the top
         sorted_ids = sorted(
             rrf_scores, key=lambda x: rrf_scores[x], reverse=True
         )

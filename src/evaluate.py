@@ -1,5 +1,10 @@
 import json
-from src.config import EVAL_K, OVERLAP_THRESHOLD, DOCS_PASS_THRESHOLD, CODE_PASS_THRESHOLD
+from src.config import (
+    EVAL_K,
+    OVERLAP_THRESHOLD,
+    DOCS_PASS_THRESHOLD,
+    CODE_PASS_THRESHOLD
+)
 
 
 class Evaluator:
@@ -126,11 +131,21 @@ class Evaluator:
 
         if "docs" in dataset_path:
             if final_recall >= DOCS_PASS_THRESHOLD:
-                print(f"✅ PASS! You achieved >= {DOCS_PASS_THRESHOLD:.0%} on the docs dataset.")
+                msg = (f"✅ PASS! You achieved >= "
+                       f"{DOCS_PASS_THRESHOLD:.0%} on the docs "
+                       "dataset.")
+                print(msg)
             else:
-                print(f"❌ FAIL. You are below the {DOCS_PASS_THRESHOLD:.0%} docs threshold.")
+                msg = (f"❌ FAIL. You are below the "
+                       f"{DOCS_PASS_THRESHOLD:.0%} docs threshold.")
+                print(msg)
         elif "code" in dataset_path:
             if final_recall >= CODE_PASS_THRESHOLD:
-                print(f"✅ PASS! You achieved >= {CODE_PASS_THRESHOLD:.0%} on the code dataset.")
+                msg = (f"✅ PASS! You achieved >= "
+                       f"{CODE_PASS_THRESHOLD:.0%} on the code "
+                       "dataset.")
+                print(msg)
             else:
-                print(f"❌ FAIL. You are below the {CODE_PASS_THRESHOLD:.0%} code threshold.")
+                msg = (f"❌ FAIL. You are below the "
+                       f"{CODE_PASS_THRESHOLD:.0%} code threshold.")
+                print(msg)

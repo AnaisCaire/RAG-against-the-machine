@@ -13,7 +13,8 @@ logging.basicConfig(filename=LOG_FILE,
 
 
 class IngestionEngine:
-    """Walks a directory tree and produces MinimalSource chunks for docs and code files."""
+    """Walks a directory tree and produces MinimalSource chunks
+    for docs and code files."""
 
     def __init__(self, max_chunk_size: int = MAX_CODE_CHUNK_SIZE) -> None:
         """Initializes code and text chunkers with the given max chunk size."""

@@ -103,11 +103,13 @@ class BatchProcessor:
             print(f"Error: file not found: {student_search_results_path}")
             return
         except json.JSONDecodeError as e:
-            print(f"Error: invalid JSON in {student_search_results_path}: {e}")
+            print(f"Error: invalid JSON in {student_search_results_path}: "
+                  f"{e}")
             return
 
         if self.generator is None:
-            raise RuntimeError("generator is None — cannot run answer_dataset.")
+            raise RuntimeError(
+                "generator is None, cannot run answer_dataset.")
 
         search_data = StudentSearchResults(**raw_data)
         answers_list = []

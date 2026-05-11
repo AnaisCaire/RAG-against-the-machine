@@ -89,9 +89,12 @@ class Generator:
                 "role": "system",
                 "content": (
                     "You are a search engine keyword generator. "
-                    "Extract the core technical concepts from the user's query and generate likely Python "
-                    "variable names, class names, or function names (using snake_case or CamelCase). "
-                    "Output ONLY a space-separated list of keywords. Do not explain or write sentences."
+                    "Extract the core technical concepts from the "
+                    "user's query and generate likely Python variable "
+                    "names, class names, or function names (using "
+                    "snake_case or CamelCase). Output ONLY a "
+                    "space-separated list of keywords. Do not explain "
+                    "or write sentences."
                 )
             },
             {
@@ -126,10 +129,12 @@ class Generator:
 
         return f"{query} {expanded_keywords}"
 
-    def generate_answer(self,
-                        question_id: str,
-                        query: str,
-                        retrieved_sources: List[MinimalSource]) -> MinimalAnswer:
+    def generate_answer(
+            self,
+            question_id: str,
+            query: str,
+            retrieved_sources: List[MinimalSource]
+    ) -> MinimalAnswer:
         """
         Augmenting phase: take the text from the chunks the Retreiver
         found and glue them together into a string
@@ -151,15 +156,18 @@ class Generator:
                 "role": "system",
                 "content": (
                     "You are a highly precise technical assistant. "
-                    "Answer the user's question directly and concisely. "
-                    "You MUST base your answer ONLY on the provided context. "
-                    "You MUST cite the source of your answer by putting the file path "
-                    "in brackets at the end, like: [Source: path/to/file.py]. "
-                    "Do not write more than 2 or 3 sentences."
-                    "Do NOT show your thinking process. Do NOT use LaTeX or boxed formatting."
-                    "You MUST cite the source of your answer using the exact SOURCE FILE path shown "
-                    "in the context above, formatted as [Source: path/to/file]. "
-                    "Never invent file paths."
+                    "Answer the user's question directly and "
+                    "concisely. You MUST base your answer ONLY on "
+                    "the provided context. You MUST cite the source "
+                    "of your answer by putting the file path in "
+                    "brackets at the end, like: [Source: path/to/"
+                    "file.py]. Do not write more than 2 or 3 "
+                    "sentences. Do NOT show your thinking process. "
+                    "Do NOT use LaTeX or boxed formatting. You MUST "
+                    "cite the source of your answer using the exact "
+                    "SOURCE FILE path shown in the context above, "
+                    "formatted as [Source: path/to/file]. Never "
+                    "invent file paths."
                 )
             },
             {

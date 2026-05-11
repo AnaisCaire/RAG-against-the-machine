@@ -40,7 +40,8 @@ class MinimalAnswer(MinimalSearchResults):
 
 
 class StudentSearchResults(BaseModel):
-    """Full dataset search output: all per-question results and the k value used."""
+    """Full dataset search output: all per-question results
+    and the k value used."""
     search_results: List[MinimalSearchResults]
     k: int
 

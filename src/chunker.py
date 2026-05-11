@@ -20,7 +20,9 @@ class TextChunker(BaseChunker):
     """Handles Markdown and standard text chunking."""
 
     def chunk(self, file_path: str, content: str) -> List[MinimalSource]:
-        """Splits text at paragraph/line/word boundaries up to max_chunk_size."""
+        """
+        Splits text at paragraph/line/word boundaries up to max_chunk_size.
+        """
         chunks: List[MinimalSource] = []
         content_length = len(content)
         current_idx = 0
@@ -57,7 +59,8 @@ class TextChunker(BaseChunker):
                     first_character_index=current_idx,
                     last_character_index=absolute_end))
                 next_idx = absolute_end - CHUNK_OVERLAP
-                current_idx = next_idx if next_idx > current_idx else absolute_end
+                current_idx = (next_idx if next_idx > current_idx
+                               else absolute_end)
         return chunks
 
 
@@ -100,16 +103,17 @@ class CodeChunker(BaseChunker):
         if (lineno is not None and end_lineno is not None and
                 col_offset is not None and end_col_offset is not None):
 
-            # AST nodes often point to the `def`/`class` keyword. We must explicitly 
-            # check the decorator_list to find the true semantic start of the code block.
+            # AST nodes often point to the `def`/`class` keyword. We must
+            # check the decorator_list to find the start of the code block.
             decorator_list = getattr(node, 'decorator_list', [])
             if decorator_list:
                 first_dec = decorator_list[0]
                 dec_ln = getattr(first_dec, 'lineno', lineno)
                 dec_col = getattr(first_dec, 'col_offset', col_offset)
-                
-                # If the decorator starts earlier, update our target coordinates
-                if dec_ln < lineno or (dec_ln == lineno and dec_col < col_offset):
+
+                # If the decorator starts earlier, update our target coor
+                if (dec_ln < lineno or
+                        (dec_ln == lineno and dec_col < col_offset)):
                     lineno = dec_ln
                     col_offset = dec_col
 
@@ -117,9 +121,11 @@ class CodeChunker(BaseChunker):
             absolute_start = line_starts[lineno - 1] + col_offset
             absolute_end = line_starts[end_lineno - 1] + end_col_offset
 
-            # In Python's AST, a decorator's col_offset points to its name (e.g., 'property'),
-            # missing the physical '@' symbol. We step backward by 1 to capture it.
-            if decorator_list and absolute_start > 0 and content[absolute_start - 1] == '@':
+            # In Python's AST, a decorator's col_offset points to its name
+            # missing the physical '@' symbol. We step backward by 1
+            if (decorator_list and
+                    absolute_start > 0 and
+                    content[absolute_start - 1] == '@'):
                 absolute_start -= 1
 
             node_length = absolute_end - absolute_start
@@ -204,7 +210,9 @@ class CodeChunker(BaseChunker):
         return chunks
 
     def chunk(self, file_path: str, content: str) -> List[MinimalSource]:
-        """Parses file as Python AST and chunks top-level nodes recursively."""
+        """
+        Parses file as Python AST and chunks top-level nodes recursively.
+        """
         line_starts = self._line_start_helper(content)
         tree = ast.parse(content)
         return (self._process_node(tree, content, line_starts, file_path))
