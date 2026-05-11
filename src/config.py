@@ -31,7 +31,7 @@ EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
 EMBEDDING_BATCH_SIZE: int = 256
 
 # ── LLM / Generator
-
+# smaller: Qwen/Qwen2.5-0.5B big: Qwen/Qwen3-0.6B
 LLM_MODEL_NAME: str = "Qwen/Qwen3-0.6B"
 
 # Numerical precision for model weights.
