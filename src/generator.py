@@ -34,14 +34,23 @@ class Generator:
 
         print(f"\nDevice selected: {self.device}\n")
 
+        if self.device == "cuda":
+            torch.backends.cuda.matmul.allow_tf32 = True
+            torch.backends.cudnn.allow_tf32 = True
+
         self.tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME)
         self.model: Any = AutoModelForCausalLM.from_pretrained(
             LLM_MODEL_NAME,
-            dtype=LLM_DTYPE,
+            torch_dtype=LLM_DTYPE,
         ).to(self.device)  # type: ignore[arg-type]
         self.model.eval()
+
+        print("\nCompiling model (first call will be slow)...\n")
+        self.model = torch.compile(self.model, mode="reduce-overhead")
+
         self.answer_cache: dict[str, str] = {}
         self._file_cache: dict[str, str] = {}
+        self._chunk_cache: dict[tuple, str] = {}
 
     def _build_prompt(self,
                       query: str,
@@ -61,9 +70,17 @@ class Generator:
                 if source.file_path not in self._file_cache:
                     with open(source.file_path, 'r', encoding='utf-8') as f:
                         self._file_cache[source.file_path] = f.read()
+
                 content = self._file_cache[source.file_path]
-                chunk_text = content[source.first_character_index:
-                                     source.last_character_index]
+
+                chunk_key = (source.file_path,
+                             source.first_character_index,
+                             source.last_character_index)
+                if chunk_key not in self._chunk_cache:
+                    self._chunk_cache[chunk_key] = content[
+                        source.first_character_index:source.last_character_index
+                    ]
+                chunk_text = self._chunk_cache[chunk_key]
 
                 chunk_str = (f"--- SOURCE FILE: {source.file_path}"
                              f"---\n{chunk_text}\n\n")
@@ -80,6 +97,7 @@ class Generator:
         prompt += f"Question: {query}\nAnswer:"
         return prompt
 
+    @torch.inference_mode()
     def expand_query(self, query: str) -> str:
         """
         make the LLM rewrite the query with more keywords
@@ -108,14 +126,17 @@ class Generator:
             add_generation_prompt=True,
             enable_thinking=ENABLE_THINKING
         )
-        inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
-        with torch.no_grad():
-            outputs = self.model.generate(
-                **inputs,
-                max_new_tokens=MAX_NEW_TOKENS_EXPAND,
-                do_sample=False,
-                pad_token_id=self.tokenizer.eos_token_id
-            )
+        inputs = self.tokenizer(
+            text, return_tensors="pt", padding=False
+        ).to(self.device)
+
+        outputs = self.model.generate(
+            **inputs,
+            max_new_tokens=MAX_NEW_TOKENS_EXPAND,
+            do_sample=False,
+            use_cache=True,
+            pad_token_id=self.tokenizer.eos_token_id
+        )
 
         input_length = inputs["input_ids"].shape[1]
         generated_tokens = outputs[0][input_length:]
@@ -129,6 +150,7 @@ class Generator:
 
         return f"{query} {expanded_keywords}"
 
+    @torch.inference_mode()
     def generate_answer(
             self,
             question_id: str,
@@ -182,16 +204,18 @@ class Generator:
             add_generation_prompt=True,
             enable_thinking=ENABLE_THINKING
         )
-        inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
-        # Generate (no_grad = no memory tracking)
-        with torch.no_grad():
-            outputs = self.model.generate(
-                **inputs,
-                max_new_tokens=MAX_NEW_TOKENS_ANSWER,
-                do_sample=False,
-                pad_token_id=self.tokenizer.eos_token_id
-            )
-        # Decode only the newly generated tokens
+        inputs = self.tokenizer(
+            text, return_tensors="pt", padding=False
+        ).to(self.device)
+
+        outputs = self.model.generate(
+            **inputs,
+            max_new_tokens=MAX_NEW_TOKENS_ANSWER,
+            do_sample=False,
+            use_cache=True,
+            pad_token_id=self.tokenizer.eos_token_id
+        )
+
         input_length = inputs["input_ids"].shape[1]
         generated_tokens = outputs[0][input_length:]
 
@@ -199,13 +223,15 @@ class Generator:
                                         skip_special_tokens=True)
         raw_answer_string = decoded if isinstance(decoded, str) else decoded[0]
         raw_answer_string = raw_answer_string.strip()
-        # Fallback cleanup just in case the model ignores the instruction
+
         if "</think>" in raw_answer_string:
             raw_answer_string = raw_answer_string.split("</think>")[-1].strip()
+
         self.answer_cache[query] = raw_answer_string
-        # Package everything into the MinimalAnswer Pydantic model
+
         return MinimalAnswer(
             question_id=question_id,
             question_str=query,
             retrieved_sources=retrieved_sources,
-            answer=raw_answer_string)
+            answer=raw_answer_string
+        )

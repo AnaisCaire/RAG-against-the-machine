@@ -44,6 +44,8 @@ export HF_HOME="/goinfre/$USER/hf_cache"
 curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/goinfre/$USER/bin" sh
 ```
 
+
+OLLAMA_VULKAN=1 ollama serve
 ---
 
 ## Example Usage

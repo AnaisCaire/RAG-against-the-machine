@@ -22,18 +22,14 @@ class Indexer:
     """Hybrid BM25 + semantic index: build, save, load, search."""
 
     def __init__(self) -> None:
-        """Loads the sentence-transformer model and initialises BM25."""
+        """Loads the sentence-transformer model on GPU."""
         self.corpus_chunks: List[MinimalSource] = []
         self.is_code: bool = False
 
         self.bm25_retriever = bm25s.BM25()
 
-        self.device: str = (
-            "cuda" if torch.cuda.is_available()
-            else "mps" if torch.backends.mps.is_available()
-            else "cpu"
-        )
-        print(f"Loading Semantic Embedding Model on {self.device}")
+        self.device: str = "cuda" if torch.cuda.is_available() else "cpu"
+        print(f"Loading Embedding Model on device: {self.device}")
 
         self.embedding_model: SentenceTransformer = SentenceTransformer(
             EMBEDDING_MODEL, device=self.device
@@ -208,7 +204,7 @@ class Indexer:
         self.bm25_retriever.index(corpus_tokens)
 
         print(
-            f"Encoding {len(raw_corp)} chunks into dense vectors..."
+            f"Encoding {len(raw_corp)} chunks into dense vectors on {self.device}..."
             " (This takes a moment)"
         )
         embeddings = self.embedding_model.encode(
