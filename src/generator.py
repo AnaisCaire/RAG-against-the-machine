@@ -24,7 +24,7 @@ class Generator:
 
     def __init__(self) -> None:
         """
-        loads the Qwen model and tokenizer on best available device.
+        loads the Qwen model and tokenizer on available device.
         """
         self.device: str = (
             "cuda" if torch.cuda.is_available()
@@ -34,11 +34,9 @@ class Generator:
 
         print(f"\nDevice selected: {self.device}\n")
 
-        if self.device == "cuda":
-            torch.backends.cuda.matmul.allow_tf32 = True
-            torch.backends.cudnn.allow_tf32 = True
-
+        # loads correct tokenizer for the model
         self.tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME)
+        # AutoModelForCausalLM to have torch dtype access 
         self.model: Any = AutoModelForCausalLM.from_pretrained(
             LLM_MODEL_NAME,
             torch_dtype=LLM_DTYPE,
@@ -46,6 +44,7 @@ class Generator:
         self.model.eval()
 
         print("\nCompiling model (first call will be slow)...\n")
+        # to make the call more optimized and faster
         self.model = torch.compile(self.model, mode="reduce-overhead")
 
         self.answer_cache: dict[str, str] = {}
@@ -98,6 +97,7 @@ class Generator:
         return prompt
 
     @torch.inference_mode()
+    # no need to remmeber or learn, just give out answers
     def expand_query(self, query: str) -> str:
         """
         make the LLM rewrite the query with more keywords

@@ -45,7 +45,7 @@ MAX_NEW_TOKENS_ANSWER: int = 40
 
 # True can improve accuracy but significantly increases latency and token cost.
 ENABLE_THINKING: bool = False
-OMP_NUM_THREADS: str = "8"
+OMP_NUM_THREADS: str = "1"
 
 # ── Prompt construction
 # Maximum total characters of retrieved source text injected into the prompt.

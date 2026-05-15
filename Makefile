@@ -1,7 +1,7 @@
 
 CODE_DIRS = src
 
-.PHONY: install debug run clean lint lint-strict pipeline
+.PHONY: install debug run clean lint lint-strict pipeline bonus
 
 install:
 	uv sync
@@ -38,8 +38,12 @@ lint-strict:
 	uv run flake8
 	PYTHONPATH=. uv run mypy $(CODE_DIRS) --strict
 
+# ── Standard pipeline (BM25-only, fast) ─────────────────────────────────────
+# Uses BM25 retrieval only — no dense embeddings, no FAISS.
+# Indexing takes under a minute; meets the mandatory Recall@5 thresholds.
+# This is the default path for regular evaluation.
 pipeline:
-	@echo "=== [1/6] Indexing ==="
+	@echo "=== [1/6] Indexing (BM25 only) ==="
 	uv run python -m src index
 	@echo "=== [2/6] Search: docs ==="
 	uv run python -m src search_dataset \
@@ -65,3 +69,37 @@ pipeline:
 		--student_results_path data/output/search_results/dataset_code_public.json \
 		--dataset_path data/datasets/AnsweredQuestions/dataset_code_public.json --k 10
 	@echo "=== Pipeline complete ==="
+
+# ── Bonus pipeline (BM25 + FAISS semantic search, slow) ─────────────────────
+# Builds dense sentence-transformer embeddings on top of BM25 and fuses
+# both rankings with Reciprocal Rank Fusion (RRF).
+# Indexing takes several extra minutes (GPU recommended).
+# Run this path to demonstrate the semantic-search bonus feature.
+bonus:
+	@echo "=== [BONUS] ==="
+	@echo "=== [1/6] Indexing (BM25 + FAISS semantic) ==="
+	uv run python -m src index --semantic True
+	@echo "=== [2/6] Search: docs (semantic) ==="
+	uv run python -m src search_dataset \
+		--dataset_path data/datasets/UnansweredQuestions/dataset_docs_public.json \
+		--save_directory data/output/search_results --k 10 --semantic True
+	@echo "=== [3/6] Search: code (semantic) ==="
+	uv run python -m src search_dataset \
+		--dataset_path data/datasets/UnansweredQuestions/dataset_code_public.json \
+		--save_directory data/output/search_results --k 10 --semantic True
+	@echo "=== [4/6] Answer: docs ==="
+	uv run python -m src answer_dataset \
+		--student_search_results_path data/output/search_results/dataset_docs_public.json \
+		--save_directory data/output/search_results_and_answer
+	@echo "=== [5/6] Answer: code ==="
+	uv run python -m src answer_dataset \
+		--student_search_results_path data/output/search_results/dataset_code_public.json \
+		--save_directory data/output/search_results_and_answer
+	@echo "=== [6/6] Evaluate ==="
+	uv run python -m src evaluate \
+		--student_results_path data/output/search_results/dataset_docs_public.json \
+		--dataset_path data/datasets/AnsweredQuestions/dataset_docs_public.json --k 10
+	uv run python -m src evaluate \
+		--student_results_path data/output/search_results/dataset_code_public.json \
+		--dataset_path data/datasets/AnsweredQuestions/dataset_code_public.json --k 10
+	@echo "=== Bonus pipeline complete ==="

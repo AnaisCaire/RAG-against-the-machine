@@ -18,71 +18,124 @@ import fire
 
 
 class RAGCLI:
-    """
-    Command line interface for the RAG pipeline
+    """Command-line interface for the RAG pipeline.
+
+    Every command that touches the Indexer accepts a --semantic flag:
+      --semantic False  (default) → BM25-only, fast, meets mandatory thresholds
+      --semantic True             → BM25 + FAISS with RRF, slower but higher
+                                    recall
+
+    The two modes share the same index directory layout.  A semantic index
+    simply has an extra faiss.index file alongside the BM25 files.  You must
+    index with --semantic True before you can search with --semantic True.
     """
 
     def __init__(self) -> None:
         self.evaluator = Evaluator()
 
+    # ------------------------------------------------------------------ #
+    # Indexing                                                             #
+    # ------------------------------------------------------------------ #
+
     def index(
         self,
         max_chunk_size: int = MAX_CODE_CHUNK_SIZE,
         docs_chunk_size: int = MAX_DOCS_CHUNK_SIZE,
+        semantic: bool = False,
     ) -> None:
-        """Build separate docs and code BM25 indices."""
-        print("=== Building docs index (md/txt/setup.py) ===")
+        """Build the docs and code retrieval indices.
+
+        Args:
+            max_chunk_size:  Max characters per code chunk (default 2000).
+            docs_chunk_size: Max characters per docs chunk (default 1800).
+            semantic:        Also build FAISS dense-vector index for semantic
+                             search (slow — takes several extra minutes).
+                             Use `make bonus` to run the full pipeline with
+                             this flag set.
+        """
+        if semantic:
+            print("=== Semantic mode ON: will build BM25 + FAISS indices ===")
+        else:
+            print("=== BM25-only mode (fast). "
+                  "Pass --semantic True for hybrid search. ===")
+
+        print("=== Building docs index (md / txt / setup.py) ===")
         docs_ingestion = IngestionEngine(max_chunk_size=docs_chunk_size)
         docs_data = docs_ingestion.ingest_docs(RAW_DATA_DIR)
-        docs_indexer = Indexer()
+        # Pass semantic flag so the indexer knows whether to load the
+        # embedding model and build FAISS alongside BM25.
+        docs_indexer = Indexer(semantic=semantic)
         docs_indexer.build_index(docs_data, is_code=False)
         docs_indexer.save_index(DOCS_INDEX_DIR)
 
-        print("=== Building code index (py) ===")
+        print("=== Building code index (.py files) ===")
         code_ingestion = IngestionEngine(max_chunk_size=max_chunk_size)
         code_data = code_ingestion.ingest_code(RAW_DATA_DIR)
-
-        code_indexer = Indexer()
+        code_indexer = Indexer(semantic=semantic)
         code_indexer.build_index(code_data, is_code=True)
         code_indexer.save_index(CODE_INDEX_DIR)
 
-    # ==== Retrival Phase ====
+    # ------------------------------------------------------------------ #
+    # Retrieval                                                            #
+    # ------------------------------------------------------------------ #
 
-    def search(self, query: str, k: int = DEFAULT_K) -> None:
-        """ Searches both docs and code indices for a query """
+    def search(
+        self,
+        query: str,
+        k: int = DEFAULT_K,
+        semantic: bool = False,
+    ) -> None:
+        """Search both docs and code indices for a single query.
 
+        Args:
+            query:    The question or keyword string to look up.
+            k:        Number of results to return per index.
+            semantic: Use FAISS-enhanced search (requires a semantic index).
+        """
         print(f"Searching for: '{query}'")
 
-        docs_indexer = Indexer()
+        docs_indexer = Indexer(semantic=semantic)
         docs_indexer.load_index(DOCS_INDEX_DIR, is_code=False)
         docs_chunks = docs_indexer.search(query, k)
         print("\n--- Top Docs Results ---")
         for i, chunk in enumerate(docs_chunks):
             print(
-                f"{i+1}. {chunk.file_path} "
+                f"{i + 1}. {chunk.file_path} "
                 f"[Chars {chunk.first_character_index}"
                 f":{chunk.last_character_index}]"
             )
 
-        code_indexer = Indexer()
+        code_indexer = Indexer(semantic=semantic)
         code_indexer.load_index(CODE_INDEX_DIR, is_code=True)
         code_chunks = code_indexer.search(query, k)
         print("\n--- Top Code Results ---")
         for i, chunk in enumerate(code_chunks):
             print(
-                f"{i+1}. {chunk.file_path} "
+                f"{i + 1}. {chunk.file_path} "
                 f"[Chars {chunk.first_character_index}"
                 f":{chunk.last_character_index}]"
             )
 
-    def search_dataset(self,
-                       dataset_path: str,
-                       save_directory: str,
-                       k: int = DEFAULT_K,
-                       expand: bool = False) -> None:
+    def search_dataset(
+        self,
+        dataset_path: str,
+        save_directory: str,
+        k: int = DEFAULT_K,
+        expand: bool = False,
+        semantic: bool = False,
+    ) -> None:
+        """Process a full dataset of questions and save search results.
+
+        Args:
+            dataset_path:    Path to the UnansweredQuestions JSON file.
+            save_directory:  Where to write the output JSON.
+            k:               Top-k results to retrieve per question.
+            expand:          Use the LLM to rewrite the query before searching
+                             (query expansion bonus feature).
+            semantic:        Use FAISS-enhanced search (requires semantic
+                             index).
         """
-        Process a dataset of questions and save the res
-        """
+        # Choose the right index based on whether dataset is for code or docs.
         name = os.path.basename(dataset_path)
         if "code" in name:
             index_dir = CODE_INDEX_DIR
@@ -90,62 +143,104 @@ class RAGCLI:
         else:
             index_dir = DOCS_INDEX_DIR
             is_code = False
-        indexer = Indexer()
+
+        indexer = Indexer(semantic=semantic)
         indexer.load_index(index_dir, is_code=is_code)
+
         gen = None
         if expand:
-            print("Loading Generator for Query Expansion...")
+            print("Loading Generator for query expansion...")
             gen = Generator()
+
         batcher = BatchProcessor(search_engine=indexer, generator=gen)
-        batcher.search_dataset(dataset_path=dataset_path,
-                               save_directory=save_directory,
-                               k=k,
-                               expand=expand)
+        batcher.search_dataset(
+            dataset_path=dataset_path,
+            save_directory=save_directory,
+            k=k,
+            expand=expand,
+        )
 
-    # ==== Augmentation Phase ====
+    # ------------------------------------------------------------------ #
+    # Answer generation                                                    #
+    # ------------------------------------------------------------------ #
 
-    def answer(self, query: str, k: int = DEFAULT_K) -> None:
-        """Search the index and generate AI answer for a query"""
+    def answer(
+        self,
+        query: str,
+        k: int = DEFAULT_K,
+        semantic: bool = False,
+    ) -> None:
+        """Search the docs index and generate an LLM answer for one query.
+
+        Args:
+            query:    The question to answer.
+            k:        Number of context chunks to retrieve.
+            semantic: Use FAISS-enhanced search (requires semantic index).
+        """
         print(f"Answering query: '{query}'")
-        # 1. Search
-        indexer = Indexer()
+
+        # Retrieve context from the docs index.
+        indexer = Indexer(semantic=semantic)
         indexer.load_index(DOCS_INDEX_DIR, is_code=False)
         found_chunks = indexer.search(query, k)
 
-        # 2. Generate
+        # Generate the answer using the LLM.
         gen = Generator()
-        temp_id = str(uuid.uuid4())  # fake UUID; no dataset available
+        temp_id = str(uuid.uuid4())  # temporary ID — no dataset available here
         answer_obj = gen.generate_answer(
             question_id=temp_id,
             query=query,
-            retrieved_sources=found_chunks
+            retrieved_sources=found_chunks,
         )
 
         print("\n--- AI Answer ---")
         print(answer_obj.answer)
 
-    def answer_dataset(self,
-                       student_search_results_path: str,
-                       save_directory: str) -> None:
-        """
-        Reads search results, generates AI answers, and saves the final JSON.
+    def answer_dataset(
+        self,
+        student_search_results_path: str,
+        save_directory: str,
+    ) -> None:
+        """Read search results and generate an LLM answer per question.
+
+        The search step (and therefore the semantic flag) is not needed here —
+        search results are already in the JSON file.
+
+        Args:
+            student_search_results_path: Output of search_dataset.
+            save_directory:              Where to write the answers JSON.
         """
         gen = Generator()
-        # We can pass None for search_engine since
-        # answering a dataset only reads from the JSON!
+        # search_engine=None because answering only reads from the JSON file;
+        # it does not need to query the index again.
         batcher = BatchProcessor(search_engine=None, generator=gen)
         batcher.answer_dataset(
             student_search_results_path=student_search_results_path,
-            save_directory=save_directory)
+            save_directory=save_directory,
+        )
 
-    def evaluate(self, student_results_path: str, dataset_path: str,
-                 k: int = EVAL_K, max_context_length: int = 2000) -> None:
+    # ------------------------------------------------------------------ #
+    # Evaluation                                                           #
+    # ------------------------------------------------------------------ #
+
+    def evaluate(
+        self,
+        student_results_path: str,
+        dataset_path: str,
+        k: int = EVAL_K,
+        max_context_length: int = 2000,
+    ) -> None:
+        """Evaluate search results against ground truth using Recall@k.
+
+        Args:
+            student_results_path: Path to the student search results JSON.
+            dataset_path:         Path to the ground-truth JSON.
+            k:                    Recall@k cutoff.
+            max_context_length:   Max chunk length for evaluation.
         """
-        Evaluates student search results against ground truth
-        using custom Recall@k.
-        """
-        self.evaluator.evaluate(student_results_path, dataset_path,
-                                k, max_context_length)
+        self.evaluator.evaluate(
+            student_results_path, dataset_path, k, max_context_length
+        )
 
 
 if __name__ == "__main__":
