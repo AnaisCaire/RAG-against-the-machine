@@ -19,17 +19,8 @@ from sentence_transformers import SentenceTransformer
 
 
 class Indexer:
-    """Hybrid BM25 + (optional) semantic FAISS index: build/save/load/search.
-
-    By default the indexer runs in BM25-only mode which is fast and still
-    achieves good recall.  Pass semantic=True to also build a dense FAISS
-    vector index with a sentence-transformer encoder.  When both are present,
-    results are fused with Reciprocal Rank Fusion (RRF) for the best of both.
-
-    Why make it optional?
-      Building dense embeddings over ~50 k code chunks takes several minutes
-      even on GPU.  BM25-only is instant and meets the mandatory thresholds.
-      Semantic mode is the bonus path: better recall, slower indexing.
+    """
+    Hybrid BM25 + (optional) semantic FAISS index: build/save/load/search.
     """
 
     def __init__(self, semantic: bool = False) -> None:
@@ -37,10 +28,8 @@ class Indexer:
         sentence-transformer embedding model.
 
         Args:
-            semantic: If True, load the embedding model now and enable FAISS
-                      for all subsequent build / load / search calls.
-                      If False (default), skip model loading entirely —
-                      BM25 will handle all retrieval.
+            semantic: If True, load the embedding model and enable FAISS
+                      If False (default), only — BM25 will handle all retrieval.
         """
         self.corpus_chunks: List[MinimalSource] = []
         self.is_code: bool = False
@@ -49,43 +38,35 @@ class Indexer:
         self.bm25_retriever = bm25s.BM25()
         self.faiss_index: Optional[faiss.IndexFlatIP] = None
 
-        # The embedding model and device are only needed in semantic mode.
-        # We initialise them to safe defaults so mypy is happy and they can
-        # be referenced without crashing even if semantic=False.
-        self.device: str = "cpu"
-        self.embedding_model: Optional[SentenceTransformer] = None
 
-        if semantic:
-            # Pick the best available compute device.
-            self.device = (
+        self.device: str = (
                 "cuda" if torch.cuda.is_available()
                 else "mps" if torch.backends.mps.is_available()
                 else "cpu"
             )
+        self.embedding_model: Optional[SentenceTransformer] = None
+
+        if semantic:
             print(f"[Semantic] Loading embedding model on {self.device} ...")
-            # SentenceTransformer does all the heavy lifting: tokenisation,
-            # BERT-style encoding, mean pooling.  Loading takes ~10–30 s.
+            # SentenceTransformer :
+            # teokenisation + padding + creating vector +
             self.embedding_model = SentenceTransformer(
                 EMBEDDING_MODEL, device=self.device
             )
             print("[Semantic] Embedding model ready.")
 
     # ------------------------------------------------------------------ #
-    # Internal helpers for corpus preparation                              #
+    #                               helpers                              #
     # ------------------------------------------------------------------ #
 
     def _make_corpus(self, chunks: List[MinimalSource]) -> List[str]:
         """Converts coordinate-based chunks into readable strings.
 
-        Opens each physical file once (grouped by path to avoid re-opening)
-        and slices out the raw text for each chunk.  For docs we also inject
-        the nearest heading and file-stem tokens so that BM25 can match on
-        section titles even when the chunk text itself is sparse.
+        Opens each file once to find raw text for each chunk.  
+        For docs we add nearest heading and file-stem tokens.
         """
         corpus: List[str] = []
 
-        # Group chunks by file so we open each file exactly once —
-        # without this grouping the bottleneck on large repos is I/O.
         dict_chunks: Dict[str, List[MinimalSource]] = defaultdict(list)
         for chunk in chunks:
             dict_chunks[chunk.file_path].append(chunk)
@@ -102,35 +83,29 @@ class Indexer:
                         chunk.last_character_index
                     ]
                     if self.is_code:
-                        # For code, prepend the file path tokens (×3) so that
-                        # queries mentioning a module name rank higher even if
-                        # the function body doesn't repeat the module name.
+                        # For code, prepend the file path tokens (×3).
                         path_prefix = ' '.join(
                             self._extract_path_tokens(filename) * 3
                         )
                         corpus.append(f"{path_prefix}\n{chunk_text}")
                     else:
                         # For docs, prepend the file stem and nearest heading
-                        # so that queries about a section title rank correctly.
                         stem = os.path.splitext(os.path.basename(filename))[0]
                         stem_tokens = [t for t in re.split(r'[_\-]', stem)
                                        if len(t) > 1]
                         stem_boost = (' '.join(stem_tokens * 2) + '\n'
                                       ) if stem_tokens else ''
                         heading = self._find_nearest_heading(
-                            content, chunk.first_character_index
-                        )
+                            content, chunk.first_character_index)
                         header_boost = (f"{heading}\n{heading}\n"
                                         if heading else "")
                         table_header = self._find_table_header(
-                            content, chunk.first_character_index, chunk_text
-                        )
+                            content, chunk.first_character_index, chunk_text)
                         table_boost = (f"{table_header}\n"
                                        if table_header else "")
                         corpus.append(
                             f"{stem_boost}{filename}\n"
-                            f"{header_boost}{table_boost}{chunk_text}"
-                        )
+                            f"{header_boost}{table_boost}{chunk_text}")
 
             except Exception:
                 print(f"Warning: could not read {each_path} for corpus.")
@@ -178,11 +153,6 @@ class Indexer:
     def _preprocess_markdown(text: str) -> str:
         """Strip markdown syntax and web noise before BM25 tokenisation.
 
-        LangChain's MarkdownTextSplitter preserves all markdown formatting
-        verbatim inside every chunk.  Without cleaning, tokens like '##',
-        '**', backticks, and bullet markers pollute the BM25 vocabulary and
-        dilute the signal from actual words.
-
         Order matters: strip structured syntax first (links, fenced blocks),
         then inline decorators, then whitespace noise.
         """
@@ -196,7 +166,6 @@ class Indexer:
         text = re.sub(r'```[^\n]*\n', '', text)
         text = re.sub(r'```', '', text)
         # heading markers: '## My Section' → 'My Section'
-        # (the text itself is valuable; the '#' symbols are not)
         text = re.sub(r'^#{1,6}\s+', '', text, flags=re.MULTILINE)
         # bold and italic markers: **word** / *word* / __word__ / _word_
         text = re.sub(r'\*{1,2}([^*\n]+)\*{1,2}', r'\1', text)
@@ -212,24 +181,13 @@ class Indexer:
     @staticmethod
     def _find_nearest_heading(content: str, char_idx: int) -> str:
         """Return the markdown heading that gives context to this chunk.
-
-        LangChain's MarkdownTextSplitter splits BEFORE heading lines, so the
-        heading text is included at the very start of the next chunk.
-        That means content[:char_idx] no longer contains the current heading —
-        we must check the chunk's own first line before scanning backward.
-
-        Priority:
           1. If the chunk itself opens with a '#' line → that IS the heading.
           2. Otherwise scan backward through content[:char_idx] for the nearest
-             previous heading (mid-section chunk inheriting its section title).
+             previous heading.
         """
-        # Check whether the chunk starts with a heading.
-        # content[char_idx:] is the chunk; grab just the first line.
         first_line = content[char_idx:].split('\n')[0].strip()
         if first_line.startswith('#'):
             return first_line.lstrip('#').strip()
-
-        # Mid-section chunk: find the section heading it belongs to.
         for line in reversed(content[:char_idx].split('\n')):
             stripped = line.strip()
             if stripped.startswith('#'):
@@ -263,17 +221,17 @@ class Indexer:
         return ''
 
     # ------------------------------------------------------------------ #
-    # Public API                                                           #
+    #       Public                                                       #
     # ------------------------------------------------------------------ #
 
     def build_index(self, chunks: List[MinimalSource], is_code: bool) -> None:
-        """Build the BM25 index (always) and, when semantic=True, the FAISS
-        dense vector index.
+        """
+        Build the BM25 index (always) 
+        if semantic=True, build the FAISS dense vector index.
 
         Args:
             chunks:  List of MinimalSource chunks to index.
             is_code: True for Python source files, False for docs / text.
-                     Controls which text-cleaning and BM25 tuning to apply.
         """
         self.corpus_chunks = chunks
         self.is_code = is_code
@@ -281,7 +239,6 @@ class Indexer:
         print(f"Extracting corpus from {len(chunks)} chunks...")
         raw_corp: List[str] = self._make_corpus(chunks)
 
-        # ---- BM25 (always built — fast, ~seconds) ----------------------
         print("Building BM25 index...")
         if is_code:
             corpus: List[str] = [self._clean_code_text(t) for t in raw_corp]
@@ -289,16 +246,14 @@ class Indexer:
             corpus = [self._clean_text(self._preprocess_markdown(t))
                       for t in raw_corp]
         # b=0.3 for code (shorter functions should not be penalised vs longer
-        # files); b=0.75 is the standard BM25+ default for prose.
+        # files); b=0.75 is the standard BM25+ default for docs.
         b = 0.3 if is_code else 0.75
         self.bm25_retriever = bm25s.BM25(method="bm25+", b=b)
         corpus_tokens = bm25s.tokenize(corpus, stopwords="en")
         self.bm25_retriever.index(corpus_tokens)
         print("BM25 index built.")
 
-        # ---- FAISS / dense embeddings (only in semantic mode — slow) ---
         if self.semantic:
-            # Guard: semantic=True but model failed to load at init time.
             if self.embedding_model is None:
                 print("[Semantic] WARNING: no embedding model loaded, "
                       "skipping FAISS build.")
@@ -309,8 +264,6 @@ class Indexer:
                 f"[Semantic] Encoding {len(raw_corp)} chunks on "
                 f"{self.device} ... (this can take several minutes)"
             )
-            # normalize_embeddings=True puts vectors on the unit sphere so
-            # inner-product search in FAISS equals cosine similarity.
             embeddings = self.embedding_model.encode(
                 raw_corp,
                 batch_size=EMBEDDING_BATCH_SIZE,
@@ -319,7 +272,7 @@ class Indexer:
             )
             dimension = embeddings.shape[1]
             # IndexFlatIP = exact inner-product (cosine) search, no
-            # approximation.  Fine for tens of thousands of chunks.
+            # approximation.
             self.faiss_index = faiss.IndexFlatIP(dimension)
             self.faiss_index.add(np.array(embeddings).astype('float32'))
             print("[Semantic] FAISS index built.")
@@ -327,10 +280,8 @@ class Indexer:
         print("Indexing complete!")
 
     def save_index(self, save_dir: str) -> None:
-        """Save the index artefacts to disk.
-
-        Always saves: chunks.json (chunk metadata), BM25 files.
-        Conditionally saves: faiss.index (only when semantic=True).
+        """
+        Save the index artefacts to disk.
         """
         print(f"Saving index to {save_dir} ...")
         os.makedirs(save_dir, exist_ok=True)
@@ -356,12 +307,6 @@ class Indexer:
 
     def load_index(self, load_dir: str, is_code: bool) -> None:
         """Load a previously saved index from disk.
-
-        Always loads: chunks.json, BM25 files.
-        Conditionally loads: faiss.index — only when self.semantic=True AND
-        the file actually exists.  If the file is missing but semantic was
-        requested, we warn and fall back to BM25-only rather than crashing.
-
         Args:
             load_dir: Directory that was passed to save_index().
             is_code:  Must match the value used at build time so text-cleaning
@@ -387,8 +332,7 @@ class Indexer:
                 self.faiss_index = faiss.read_index(faiss_path)
                 print(f"[Semantic] FAISS index loaded from {load_dir}.")
             else:
-                # The index was probably built without --semantic True.
-                # Rather than crashing, silently fall back to BM25-only.
+                # silently fall back to BM25-only.
                 print(
                     f"[Semantic] WARNING: faiss.index not found in {load_dir}."
                     " Re-run `index --semantic True` to build it."
@@ -401,8 +345,8 @@ class Indexer:
     def search(self, query: str, k: int = DEFAULT_K) -> List[MinimalSource]:
         """Retrieve the top-k most relevant chunks for a query.
 
-        In BM25-only mode (semantic=False): returns the BM25 ranking directly.
-        In semantic mode (semantic=True):   fuses BM25 and FAISS rankings with
+        1. BM25-only mode: return the BM25 ranking directly.
+        2. semantic mode: fuses BM25 and FAISS rankings with
         Reciprocal Rank Fusion (RRF) for better precision.
 
         Args:
@@ -412,37 +356,32 @@ class Indexer:
         if k <= 0 or not query or not query.strip():
             return []
 
-        # Apply the same text-cleaning to the query that was applied to the
-        # corpus at index time, so vocabulary matches correctly.
+        # Apply the same text-cleaning to the query
         if self.is_code:
             clean_q = self._clean_code_text(query)
         else:
             clean_q = self._clean_text(query)
 
-        # ---- BM25 retrieval (always runs) ------------------------------
+        # ---- BM25 retrieval ------------------------------
         # Fetch k * CANDIDATE_MULT candidates so the fusion step has
         # enough material to work with.
         token_q = bm25s.tokenize(clean_q, stopwords="en")
         docs, _ = self.bm25_retriever.retrieve(
-            token_q, k=k * CANDIDATE_MULT
-        )
+            token_q, k=k * CANDIDATE_MULT)
         bm25_results = [self.corpus_chunks[ticket] for ticket in docs[0]]
 
-        # ---- BM25-only path (semantic=False or FAISS not loaded) -------
-        # Return the top-k BM25 hits directly — no fusion needed.
+        # ---- BM25-only path  -------
         if not self.semantic or self.faiss_index is None:
             return bm25_results[:k]
 
-        # ---- Semantic retrieval (only when semantic=True) ---------------
+        # ---- Semantic retrieval  ---------------
         # Encode the raw query (not the cleaned version) so the transformer
         # sees natural language rather than identifier tokens.
         assert self.embedding_model is not None  # guaranteed by __init__ guard
         query_vector = self.embedding_model.encode(
-            [query], normalize_embeddings=True
-        )
+            [query], normalize_embeddings=True)
         _, indices = self.faiss_index.search(
-            np.array(query_vector).astype('float32'), k * CANDIDATE_MULT
-        )
+            np.array(query_vector).astype('float32'), k * CANDIDATE_MULT)
         semantic_results = [
             self.corpus_chunks[idx] for idx in indices[0] if idx != -1
         ]
@@ -450,7 +389,7 @@ class Indexer:
         # ---- Reciprocal Rank Fusion (RRF) --------------------------------
         # Score each chunk by summing 1/(rank + RRF_CONSTANT) across both
         # rankers.  A chunk that appears near the top of both BM25 and FAISS
-        # accumulates the highest score, surfacing the most confident hits.
+        # accumulates the highest score.
         def chunk_id(c: MinimalSource) -> str:
             """Unique string key for a chunk — file + start offset."""
             return f"{c.file_path}_{c.first_character_index}"

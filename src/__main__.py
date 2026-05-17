@@ -18,23 +18,15 @@ import fire
 
 
 class RAGCLI:
-    """Command-line interface for the RAG pipeline.
-
-    Every command that touches the Indexer accepts a --semantic flag:
-      --semantic False  (default) → BM25-only, fast, meets mandatory thresholds
-      --semantic True             → BM25 + FAISS with RRF, slower but higher
-                                    recall
-
-    The two modes share the same index directory layout.  A semantic index
-    simply has an extra faiss.index file alongside the BM25 files.  You must
-    index with --semantic True before you can search with --semantic True.
+    """
+    Command-line interface for the RAG pipeline.
     """
 
     def __init__(self) -> None:
         self.evaluator = Evaluator()
 
     # ------------------------------------------------------------------ #
-    # Indexing                                                             #
+    # Indexing                                                           #
     # ------------------------------------------------------------------ #
 
     def index(
@@ -62,8 +54,7 @@ class RAGCLI:
         print("=== Building docs index (md / txt / setup.py) ===")
         docs_ingestion = IngestionEngine(max_chunk_size=docs_chunk_size)
         docs_data = docs_ingestion.ingest_docs(RAW_DATA_DIR)
-        # Pass semantic flag so the indexer knows whether to load the
-        # embedding model and build FAISS alongside BM25.
+        # Pass semantic flag so the indexer knows
         docs_indexer = Indexer(semantic=semantic)
         docs_indexer.build_index(docs_data, is_code=False)
         docs_indexer.save_index(DOCS_INDEX_DIR)
@@ -76,7 +67,7 @@ class RAGCLI:
         code_indexer.save_index(CODE_INDEX_DIR)
 
     # ------------------------------------------------------------------ #
-    # Retrieval                                                            #
+    # Retrieval                                                          #
     # ------------------------------------------------------------------ #
 
     def search(
@@ -102,8 +93,7 @@ class RAGCLI:
             print(
                 f"{i + 1}. {chunk.file_path} "
                 f"[Chars {chunk.first_character_index}"
-                f":{chunk.last_character_index}]"
-            )
+                f":{chunk.last_character_index}]")
 
         code_indexer = Indexer(semantic=semantic)
         code_indexer.load_index(CODE_INDEX_DIR, is_code=True)
@@ -113,8 +103,7 @@ class RAGCLI:
             print(
                 f"{i + 1}. {chunk.file_path} "
                 f"[Chars {chunk.first_character_index}"
-                f":{chunk.last_character_index}]"
-            )
+                f":{chunk.last_character_index}]")
 
     def search_dataset(
         self,
@@ -161,7 +150,7 @@ class RAGCLI:
         )
 
     # ------------------------------------------------------------------ #
-    # Answer generation                                                    #
+    # Answer generation                                                  #
     # ------------------------------------------------------------------ #
 
     def answer(
@@ -186,7 +175,7 @@ class RAGCLI:
 
         # Generate the answer using the LLM.
         gen = Generator()
-        temp_id = str(uuid.uuid4())  # temporary ID — no dataset available here
+        temp_id = str(uuid.uuid4())  # temporary ID — no dataset here
         answer_obj = gen.generate_answer(
             question_id=temp_id,
             query=query,
@@ -203,9 +192,6 @@ class RAGCLI:
     ) -> None:
         """Read search results and generate an LLM answer per question.
 
-        The search step (and therefore the semantic flag) is not needed here —
-        search results are already in the JSON file.
-
         Args:
             student_search_results_path: Output of search_dataset.
             save_directory:              Where to write the answers JSON.
@@ -216,11 +202,10 @@ class RAGCLI:
         batcher = BatchProcessor(search_engine=None, generator=gen)
         batcher.answer_dataset(
             student_search_results_path=student_search_results_path,
-            save_directory=save_directory,
-        )
+            save_directory=save_directory,)
 
     # ------------------------------------------------------------------ #
-    # Evaluation                                                           #
+    # Evaluation                                                         #
     # ------------------------------------------------------------------ #
 
     def evaluate(
@@ -239,8 +224,7 @@ class RAGCLI:
             max_context_length:   Max chunk length for evaluation.
         """
         self.evaluator.evaluate(
-            student_results_path, dataset_path, k, max_context_length
-        )
+            student_results_path, dataset_path, k, max_context_length)
 
 
 if __name__ == "__main__":

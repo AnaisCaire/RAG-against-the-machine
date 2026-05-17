@@ -43,10 +43,11 @@ class Generator:
         ).to(self.device)  # type: ignore[arg-type]
         self.model.eval()
 
-        print("\nCompiling model (first call will be slow)...\n")
-        # to make the call more optimized and faster
+        print("\nPytorch optimization model (first call will be slow)...\n")
+        # to make the next calls more optimized and faster (one-time tracing pass)
         self.model = torch.compile(self.model, mode="reduce-overhead")
 
+        # bonus feature
         self.answer_cache: dict[str, str] = {}
         self._file_cache: dict[str, str] = {}
         self._chunk_cache: dict[tuple, str] = {}
@@ -96,6 +97,7 @@ class Generator:
         prompt += f"Question: {query}\nAnswer:"
         return prompt
 
+    # bonus feature
     @torch.inference_mode()
     # no need to remmeber or learn, just give out answers
     def expand_query(self, query: str) -> str:
@@ -120,12 +122,14 @@ class Generator:
                 "content": query
             }
         ]
+        # create the right format
         text = self.tokenizer.apply_chat_template(
             messages,
             tokenize=False,
             add_generation_prompt=True,
-            enable_thinking=ENABLE_THINKING
-        )
+            enable_thinking=ENABLE_THINKING)
+
+        # tokenize
         inputs = self.tokenizer(
             text, return_tensors="pt", padding=False
         ).to(self.device)
@@ -135,8 +139,7 @@ class Generator:
             max_new_tokens=MAX_NEW_TOKENS_EXPAND,
             do_sample=False,
             use_cache=True,
-            pad_token_id=self.tokenizer.eos_token_id
-        )
+            pad_token_id=self.tokenizer.eos_token_id)
 
         input_length = inputs["input_ids"].shape[1]
         generated_tokens = outputs[0][input_length:]
@@ -169,8 +172,7 @@ class Generator:
                 question_id=question_id,
                 question_str=query,
                 retrieved_sources=retrieved_sources,
-                answer=self.answer_cache[query]
-            )
+                answer=self.answer_cache[query])
 
         prompt = self._build_prompt(query, retrieved_sources)
         messages = [
@@ -233,5 +235,4 @@ class Generator:
             question_id=question_id,
             question_str=query,
             retrieved_sources=retrieved_sources,
-            answer=raw_answer_string
-        )
+            answer=raw_answer_string)

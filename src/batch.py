@@ -79,7 +79,7 @@ class BatchProcessor:
         os.makedirs(save_directory, exist_ok=True)
 
         with open(full_save_path, 'w', encoding='utf-8') as f:
-            # .model_dump_json() i= instantly makes a JSON string
+            # .model_dump_json() = instantly makes a JSON string
             f.write(final_output.model_dump_json(indent=4))
 
         print(f"Search dataset complete! Saved to {full_save_path}")

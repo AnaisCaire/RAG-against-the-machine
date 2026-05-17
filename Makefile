@@ -18,6 +18,7 @@ clean:
 	rm -f data/output/search_results_and_answer/*
 	@echo "--- Cleanup Complete ---"
 
+# use CMD="..."
 debug:
 	PYTHONPATH=. uv run python -m pdb -c continue -m src $(CMD)
 
@@ -38,10 +39,8 @@ lint-strict:
 	uv run flake8
 	PYTHONPATH=. uv run mypy $(CODE_DIRS) --strict
 
-# ── Standard pipeline (BM25-only, fast) ─────────────────────────────────────
-# Uses BM25 retrieval only — no dense embeddings, no FAISS.
-# Indexing takes under a minute; meets the mandatory Recall@5 thresholds.
-# This is the default path for regular evaluation.
+# ── pipeline ─────────────────────────────────────
+
 pipeline:
 	@echo "=== [1/6] Indexing (BM25 only) ==="
 	uv run python -m src index
@@ -70,11 +69,8 @@ pipeline:
 		--dataset_path data/datasets/AnsweredQuestions/dataset_code_public.json --k 10
 	@echo "=== Pipeline complete ==="
 
-# ── Bonus pipeline (BM25 + FAISS semantic search, slow) ─────────────────────
-# Builds dense sentence-transformer embeddings on top of BM25 and fuses
-# both rankings with Reciprocal Rank Fusion (RRF).
-# Indexing takes several extra minutes (GPU recommended).
-# Run this path to demonstrate the semantic-search bonus feature.
+# ── Bonus pipeline (BM25 + FAISS semantic search) ─────────────────────
+
 bonus:
 	@echo "=== [BONUS] ==="
 	@echo "=== [1/6] Indexing (BM25 + FAISS semantic) ==="
