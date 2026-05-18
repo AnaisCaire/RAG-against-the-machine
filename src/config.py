@@ -37,7 +37,7 @@ LLM_MODEL_NAME: str = "Qwen/Qwen3-0.6B"
 # Numerical precision for model weights.
 # torch.float32  → full precision, higher memory (~2× bfloat16)
 # torch.bfloat16 → halves VRAM/RAM with negligible quality loss on modern GPUs
-LLM_DTYPE: torch.dtype = torch.float16
+LLM_DTYPE: torch.dtype = torch.float32
 
 
 MAX_NEW_TOKENS_EXPAND: int = 50
@@ -45,7 +45,7 @@ MAX_NEW_TOKENS_ANSWER: int = 40
 
 # True can improve accuracy but significantly increases latency and token cost.
 ENABLE_THINKING: bool = False
-OMP_NUM_THREADS: str = "1"
+OMP_NUM_THREADS: str = "8"
 
 # ── Prompt construction
 # Maximum total characters of retrieved source text injected into the prompt.

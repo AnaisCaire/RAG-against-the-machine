@@ -49,7 +49,7 @@ class Indexer:
         if semantic:
             print(f"[Semantic] Loading embedding model on {self.device} ...")
             # SentenceTransformer :
-            # teokenisation + padding + creating vector +
+            # tokenisation + padding + creating vector +
             self.embedding_model = SentenceTransformer(
                 EMBEDDING_MODEL, device=self.device
             )

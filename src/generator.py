@@ -1,11 +1,11 @@
 import os
 from typing import Any, List
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from src.models import MinimalSource, MinimalAnswer
 from src.config import (
     OMP_NUM_THREADS,
     LLM_MODEL_NAME,
-    LLM_DTYPE,
+    # LLM_DTYPE,
     MAX_NEW_TOKENS_EXPAND,
     MAX_NEW_TOKENS_ANSWER,
     ENABLE_THINKING,
@@ -36,16 +36,20 @@ class Generator:
 
         # loads correct tokenizer for the model
         self.tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME)
+        #load model with INT8 and not float32:
+        quanti = BitsAndBytesConfig(load_in_8bit=True)
         # AutoModelForCausalLM to have torch dtype access 
         self.model: Any = AutoModelForCausalLM.from_pretrained(
             LLM_MODEL_NAME,
-            torch_dtype=LLM_DTYPE,
+            #torch_dtype=LLM_DTYPE, #!Use on mac or CUDA
+            quantization_config=quanti,
         ).to(self.device)  # type: ignore[arg-type]
         self.model.eval()
 
-        print("\nPytorch optimization model (first call will be slow)...\n")
-        # to make the next calls more optimized and faster (one-time tracing pass)
-        self.model = torch.compile(self.model, mode="reduce-overhead")
+        if self.device != "cpu":
+            print("\nPytorch optimization model (first call will be slow)...\n")
+            # to make the next calls more optimized and faster (one-time tracing pass)
+            self.model = torch.compile(self.model, mode="reduce-overhead")
 
         # bonus feature
         self.answer_cache: dict[str, str] = {}
@@ -54,6 +58,7 @@ class Generator:
 
     def _build_prompt(self,
                       query: str,
+
                       retrieved_sources: List[MinimalSource]) -> str:
         """
         Constructs the prompt string for the LLM.

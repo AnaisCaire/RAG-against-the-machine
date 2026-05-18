@@ -1160,9 +1160,9 @@
                     "last_character_index": 10529
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/internvl.py",
-                    "first_character_index": 11874,
-                    "last_character_index": 12911
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/h2ovl.py",
+                    "first_character_index": 8165,
+                    "last_character_index": 9199
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/skyworkr1v.py",
@@ -1170,14 +1170,9 @@
                     "last_character_index": 10858
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/h2ovl.py",
-                    "first_character_index": 8165,
-                    "last_character_index": 9199
-                },
-                {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/internvl.py",
-                    "first_character_index": 10291,
-                    "last_character_index": 11571
+                    "first_character_index": 11874,
+                    "last_character_index": 12911
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/skyworkr1v.py",
@@ -1185,14 +1180,19 @@
                     "last_character_index": 9390
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/skyworkr1v.py",
-                    "first_character_index": 4260,
-                    "last_character_index": 4707
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/internvl.py",
+                    "first_character_index": 10291,
+                    "last_character_index": 11571
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/internvl.py",
                     "first_character_index": 5578,
                     "last_character_index": 6023
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/skyworkr1v.py",
+                    "first_character_index": 4260,
+                    "last_character_index": 4707
                 }
             ],
             "answer": "The default value for the `min_dynamic_patch` parameter in the `NemotronVL` model initialization is not explicitly stated in the provided context. However, based on the code snippet provided, the"
@@ -1532,9 +1532,9 @@
                     "last_character_index": 20508
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/qwen2_5_vl.py",
-                    "first_character_index": 17418,
-                    "last_character_index": 18846
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/qwen2_vl.py",
+                    "first_character_index": 18209,
+                    "last_character_index": 19634
                 }
             ],
             "answer": "The default value for `mlp_bias` in ExaoneGatedMLP initialization is `False` [Source: data/raw/vllm-0.10.1/vllm"
@@ -1787,6 +1787,11 @@
                     "last_character_index": 7024
                 },
                 {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/h2ovl.py",
+                    "first_character_index": 8165,
+                    "last_character_index": 9199
+                },
+                {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/skyworkr1v.py",
                     "first_character_index": 9819,
                     "last_character_index": 10858
@@ -1795,11 +1800,6 @@
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/internvl.py",
                     "first_character_index": 11874,
                     "last_character_index": 12911
-                },
-                {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/h2ovl.py",
-                    "first_character_index": 8165,
-                    "last_character_index": 9199
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/skyworkr1v.py",
@@ -2041,13 +2041,13 @@
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/distributed/parallel_state.py",
-                    "first_character_index": 3984,
-                    "last_character_index": 4348
+                    "first_character_index": 4648,
+                    "last_character_index": 5000
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/distributed/parallel_state.py",
-                    "first_character_index": 4648,
-                    "last_character_index": 5000
+                    "first_character_index": 3984,
+                    "last_character_index": 4348
                 }
             ],
             "answer": "If you try to call `patch_tensor_parallel_group` when the tensor parallel state is already patched, the code will raise an assertion error. [Source: data/raw/vllm-0.1"
@@ -2164,7 +2164,7 @@
                     "last_character_index": 25024
                 }
             ],
-            "answer": "When `cudagraph_capture_sizes` is already set in vLLM's `init_with_cudagraph_sizes` method, the code does not change the configuration, and no logging is performed."
+            "answer": "When `cudagraph_capture_sizes` is already set in vLLM's `init_with_cudagraph_sizes` method, the code does not change it, so no action is taken. ["
         },
         {
             "question_id": "e9157a40-4465-4de7-bd4d-033b4c173493",
@@ -2558,9 +2558,9 @@
                     "last_character_index": 19908
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/aya_vision.py",
-                    "first_character_index": 16956,
-                    "last_character_index": 17605
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/cohere2_vision.py",
+                    "first_character_index": 15642,
+                    "last_character_index": 16288
                 }
             ],
             "answer": "The default value for the multimodal_embeddings parameter in the get_input_embeddings method of the Molmo model is not specified in the provided context. However, the code snippet indicates that if multimodal_embeddings is"
@@ -3061,14 +3061,14 @@
                     "last_character_index": 15470
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/cohere2_vision.py",
-                    "first_character_index": 16294,
-                    "last_character_index": 17317
-                },
-                {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/aya_vision.py",
                     "first_character_index": 17611,
                     "last_character_index": 18634
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/cohere2_vision.py",
+                    "first_character_index": 16294,
+                    "last_character_index": 17317
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/transformers_utils/configs/nemotron.py",
@@ -3128,9 +3128,9 @@
                     "last_character_index": 7727
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/v1/worker/gpu_model_runner.py",
-                    "first_character_index": 101821,
-                    "last_character_index": 102722
+                    "file_path": "data/raw/vllm-0.10.1/vllm/v1/worker/tpu_model_runner.py",
+                    "first_character_index": 86219,
+                    "last_character_index": 87124
                 }
             ],
             "answer": "The default value of the pin_memory parameter in the `MultiModalKwargs._try_stack` method is `False`. [Source: data/raw/vllm-0.10.1/v"
@@ -3247,7 +3247,7 @@
                     "last_character_index": 33592
                 }
             ],
-            "answer": "The default value of max_position_embeddings in ChameleonSwinDecoderLayer is not explicitly provided in the context. However, based on the information given, the ChameleonSwinDecoderLayer is defined with"
+            "answer": "The default value of max_position_embeddings in ChameleonSwinDecoderLayer is not explicitly provided in the context. However, based on the information given, the ChameleonDecoderLayer is defined with a configuration"
         },
         {
             "question_id": "9024881e-e178-462f-8435-7fc4609da96a",
@@ -3466,13 +3466,13 @@
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/linear.py",
-                    "first_character_index": 31164,
-                    "last_character_index": 31278
+                    "first_character_index": 28373,
+                    "last_character_index": 28487
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/linear.py",
-                    "first_character_index": 28373,
-                    "last_character_index": 28487
+                    "first_character_index": 31164,
+                    "last_character_index": 31278
                 }
             ],
             "answer": "The default value for the use_bitsandbytes_4bit attribute when it's not present on a parameter object in vLLM's linear layer is `False`. [Source: data/raw/vll"
@@ -3720,14 +3720,14 @@
                     "last_character_index": 28290
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/skyworkr1v.py",
-                    "first_character_index": 30978,
-                    "last_character_index": 32313
-                },
-                {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/internvl.py",
                     "first_character_index": 48687,
                     "last_character_index": 50022
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/skyworkr1v.py",
+                    "first_character_index": 30978,
+                    "last_character_index": 32313
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/nemotron_vl.py",
@@ -3787,14 +3787,14 @@
                     "last_character_index": 15900
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/exaone4.py",
-                    "first_character_index": 20091,
-                    "last_character_index": 20659
-                },
-                {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/exaone.py",
                     "first_character_index": 20578,
                     "last_character_index": 21146
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/exaone4.py",
+                    "first_character_index": 20091,
+                    "last_character_index": 20659
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/arcee.py",
@@ -3812,9 +3812,9 @@
                     "last_character_index": 15983
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/gemma3.py",
-                    "first_character_index": 21263,
-                    "last_character_index": 21616
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/granitemoeshared.py",
+                    "first_character_index": 13500,
+                    "last_character_index": 13853
                 }
             ],
             "answer": "The AutoWeightsLoader skips the prefix \"lm_head.\" in the MiniCPM Eagle model when tie_word_embeddings is True. [Source: data/raw/vllm-0.10.1"
@@ -3916,14 +3916,14 @@
                     "last_character_index": 13785
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/stablelm.py",
-                    "first_character_index": 11170,
-                    "last_character_index": 12927
-                },
-                {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/orion.py",
                     "first_character_index": 10110,
                     "last_character_index": 11867
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/stablelm.py",
+                    "first_character_index": 11170,
+                    "last_character_index": 12927
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/olmo.py",
@@ -4083,13 +4083,13 @@
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/llm.py",
-                    "first_character_index": 64430,
-                    "last_character_index": 64468
+                    "first_character_index": 14592,
+                    "last_character_index": 14630
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/llm.py",
-                    "first_character_index": 14592,
-                    "last_character_index": 14630
+                    "first_character_index": 64430,
+                    "last_character_index": 64468
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/llm.py",
@@ -4114,12 +4114,12 @@
                     "last_character_index": 3841
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/utils/marlin_utils_test_24.py",
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/utils/marlin_utils_test.py",
                     "first_character_index": 107,
                     "last_character_index": 160
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/utils/marlin_utils_test.py",
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/utils/marlin_utils_test_24.py",
                     "first_character_index": 107,
                     "last_character_index": 160
                 },
@@ -4150,8 +4150,8 @@
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/utils/marlin_utils_test_24.py",
-                    "first_character_index": 8270,
-                    "last_character_index": 8289
+                    "first_character_index": 190,
+                    "last_character_index": 202
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/utils/marlin_utils_test.py",
@@ -4253,14 +4253,14 @@
                     "last_character_index": 15500
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/orion.py",
-                    "first_character_index": 11870,
-                    "last_character_index": 13861
-                },
-                {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/deepseek.py",
                     "first_character_index": 17869,
                     "last_character_index": 19869
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/orion.py",
+                    "first_character_index": 11870,
+                    "last_character_index": 13861
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/persimmon.py",
@@ -4814,13 +4814,13 @@
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/v1/sample/rejection_sampler.py",
-                    "first_character_index": 6356,
-                    "last_character_index": 6413
+                    "first_character_index": 6027,
+                    "last_character_index": 6078
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/v1/sample/rejection_sampler.py",
-                    "first_character_index": 6027,
-                    "last_character_index": 6078
+                    "first_character_index": 6356,
+                    "last_character_index": 6413
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/v1/sample/rejection_sampler.py",
@@ -5084,8 +5084,13 @@
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/third_party/pynvml.py",
-                    "first_character_index": 21787,
-                    "last_character_index": 21836
+                    "first_character_index": 27625,
+                    "last_character_index": 27675
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/third_party/pynvml.py",
+                    "first_character_index": 27530,
+                    "last_character_index": 27580
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/third_party/pynvml.py",
@@ -5099,8 +5104,8 @@
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/third_party/pynvml.py",
-                    "first_character_index": 27342,
-                    "last_character_index": 27392
+                    "first_character_index": 21601,
+                    "last_character_index": 21650
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/third_party/pynvml.py",
@@ -5109,13 +5114,8 @@
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/third_party/pynvml.py",
-                    "first_character_index": 27530,
-                    "last_character_index": 27580
-                },
-                {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/third_party/pynvml.py",
-                    "first_character_index": 21601,
-                    "last_character_index": 21650
+                    "first_character_index": 27342,
+                    "last_character_index": 27392
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/third_party/pynvml.py",
@@ -5124,8 +5124,8 @@
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/third_party/pynvml.py",
-                    "first_character_index": 27625,
-                    "last_character_index": 27675
+                    "first_character_index": 22066,
+                    "last_character_index": 22115
                 }
             ],
             "answer": "The constant value for NVML_FI_DEV_NVLINK_RECOVERY_ERROR_COUNT_TOTAL in vLLM's pynvml module is 59. [Source: data/raw/vllm"

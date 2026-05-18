@@ -5,7 +5,7 @@ from src.config import CHUNK_OVERLAP
 
 
 class BaseChunker:
-    """Base class for all chunking strategies."""
+    """Base class for chunking strategies."""
 
     def __init__(self, max_chunk_size: int) -> None:
         """Sets the maximum allowed chunk size in characters."""
@@ -17,30 +17,20 @@ class BaseChunker:
 
 
 class TextChunker(BaseChunker):
-    """Handles Markdown and plain-text chunking.
-
-    Why not LangChain's MarkdownTextSplitter?
-    LangChain lists '\n#{1,6} ' as a heading separator but treats it as a
-    *literal* string (is_separator_regex=False by default), so it never
-    matches any real markdown heading.  It effectively degrades to splitting
-    only on blank lines and newlines — the same fallbacks used here, but
-    without heading awareness.
-
-    This implementation uses rfind to find the rightmost valid break point
-    inside the size window, maximising chunk size.  Larger chunks overlap
-    ground-truth source ranges more easily, which directly benefits the
-    5%-overlap Recall@k metric used for grading.
+    """
+    Handles Markdown and plain-text chunking.
 
     Break priority (highest to lowest):
       1. '\n#' — any heading level, preserves section boundaries
       2. '\n\n' — paragraph break
       3. '\n'  — line break
       4. ' '   — word boundary
-      5. hard cut — last resort, avoids infinite loops
+      5. hard cut
     """
 
     def chunk(self, file_path: str, content: str) -> List[MinimalSource]:
-        """Splits text at the rightmost semantic boundary up to max_chunk_size.
+        """
+        Splits text at the rightmost semantic boundary up to max_chunk_size.
         """
         chunks: List[MinimalSource] = []
         content_length = len(content)
@@ -49,7 +39,6 @@ class TextChunker(BaseChunker):
         while current_idx < content_length:
             max_end = min(current_idx + self.max_chunk_size, content_length)
 
-            # Last window: take everything remaining.
             if max_end == content_length:
                 chunks.append(MinimalSource(
                     file_path=file_path,
@@ -60,8 +49,7 @@ class TextChunker(BaseChunker):
 
             node_text = content[current_idx:max_end]
 
-            # rfind returns the LAST (rightmost) occurrence so the chunk is
-            # as large as possible while still ending at a clean boundary.
+            # rfind = the LAST occurrence
             heading_pos = node_text.rfind('\n#')
             paragraph_pos = node_text.rfind('\n\n')
 
@@ -82,10 +70,6 @@ class TextChunker(BaseChunker):
                 first_character_index=current_idx,
                 last_character_index=absolute_end,
             ))
-
-            # Step back by CHUNK_OVERLAP so adjacent chunks share context,
-            # reducing the chance a relevant passage falls entirely in the
-            # gap between two consecutive chunks.
             next_idx = absolute_end - CHUNK_OVERLAP
             current_idx = next_idx if next_idx > current_idx else absolute_end
 
@@ -99,9 +83,6 @@ class CodeChunker(BaseChunker):
     def _line_start_helper(content: str) -> List[int]:
         """
         maps where every line starts in the raw text.
-        (lineo and col_offset wont be enough)
-        line number is not the absolute character, and thats what we need
-        the int is the amount of chars between the 0 and the adding new line
         note: AST line numbers are 1-indexed, so line_starts[0] = line 1.
         """
         starts: List[int] = [0]
@@ -131,7 +112,7 @@ class CodeChunker(BaseChunker):
         if (lineno is not None and end_lineno is not None and
                 col_offset is not None and end_col_offset is not None):
 
-            # AST nodes often point to the `def`/`class` keyword. We must
+            # AST nodes point to the `def`/`class` keyword.
             # check the decorator_list to find the start of the code block.
             decorator_list = getattr(node, 'decorator_list', [])
             if decorator_list:

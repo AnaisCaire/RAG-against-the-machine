@@ -2962,7 +2962,7 @@
                     "last_character_index": 2902
                 }
             ],
-            "answer": "To serve a model with audio input support in vLLM, you need to use the `AudioProcessor` class from the `vllm` library. This class allows you to handle audio data"
+            "answer": "To serve a model with audio input support in vLLM, you need to use the `AudioProcessor` class from the `vllm` library. This class allows you to handle audio input"
         },
         {
             "question_id": "070dd694-1d93-473d-8d04-3ac50689b023",
