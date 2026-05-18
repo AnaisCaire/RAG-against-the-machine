@@ -28,8 +28,8 @@ class Indexer:
         sentence-transformer embedding model.
 
         Args:
-            semantic: If True, load the embedding model and enable FAISS
-                      If False (default), only — BM25 will handle all retrieval.
+          semantic: If True, load the embedding model and enable FAISS
+                    If False (default), only — BM25 will handle all retrieval.
         """
         self.corpus_chunks: List[MinimalSource] = []
         self.is_code: bool = False
@@ -37,7 +37,6 @@ class Indexer:
 
         self.bm25_retriever = bm25s.BM25()
         self.faiss_index: Optional[faiss.IndexFlatIP] = None
-
 
         self.device: str = (
                 "cuda" if torch.cuda.is_available()
@@ -62,7 +61,7 @@ class Indexer:
     def _make_corpus(self, chunks: List[MinimalSource]) -> List[str]:
         """Converts coordinate-based chunks into readable strings.
 
-        Opens each file once to find raw text for each chunk.  
+        Opens each file once to find raw text for each chunk.
         For docs we add nearest heading and file-stem tokens.
         """
         corpus: List[str] = []
@@ -226,7 +225,7 @@ class Indexer:
 
     def build_index(self, chunks: List[MinimalSource], is_code: bool) -> None:
         """
-        Build the BM25 index (always) 
+        Build the BM25 index (always)
         if semantic=True, build the FAISS dense vector index.
 
         Args:
@@ -295,7 +294,6 @@ class Indexer:
         # BM25 index files (vocab + sparse matrix).
         self.bm25_retriever.save(save_dir)
 
-        # FAISS binary — only written when we actually built it.
         if self.semantic and self.faiss_index is not None:
             faiss.write_index(
                 self.faiss_index,
@@ -325,14 +323,13 @@ class Indexer:
         # Load BM25 sparse index.
         self.bm25_retriever = bm25s.BM25.load(load_dir, load_corpus=False)
 
-        # Load FAISS dense index — only if requested and available.
         if self.semantic:
             faiss_path = os.path.join(load_dir, "faiss.index")
             if os.path.exists(faiss_path):
                 self.faiss_index = faiss.read_index(faiss_path)
                 print(f"[Semantic] FAISS index loaded from {load_dir}.")
             else:
-                # silently fall back to BM25-only.
+                # fall back to BM25-only.
                 print(
                     f"[Semantic] WARNING: faiss.index not found in {load_dir}."
                     " Re-run `index --semantic True` to build it."
@@ -356,7 +353,6 @@ class Indexer:
         if k <= 0 or not query or not query.strip():
             return []
 
-        # Apply the same text-cleaning to the query
         if self.is_code:
             clean_q = self._clean_code_text(query)
         else:
@@ -377,7 +373,7 @@ class Indexer:
         # ---- Semantic retrieval  ---------------
         # Encode the raw query (not the cleaned version) so the transformer
         # sees natural language rather than identifier tokens.
-        assert self.embedding_model is not None  # guaranteed by __init__ guard
+        assert self.embedding_model is not None
         query_vector = self.embedding_model.encode(
             [query], normalize_embeddings=True)
         _, indices = self.faiss_index.search(
@@ -388,7 +384,7 @@ class Indexer:
 
         # ---- Reciprocal Rank Fusion (RRF) --------------------------------
         # Score each chunk by summing 1/(rank + RRF_CONSTANT) across both
-        # rankers.  A chunk that appears near the top of both BM25 and FAISS
+        # rankers. A chunk that appears near the top of both BM25 and FAISS
         # accumulates the highest score.
         def chunk_id(c: MinimalSource) -> str:
             """Unique string key for a chunk — file + start offset."""

@@ -1,6 +1,9 @@
 import os
 from typing import Any, List
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    BitsAndBytesConfig)
 from src.models import MinimalSource, MinimalAnswer
 from src.config import (
     OMP_NUM_THREADS,
@@ -36,19 +39,19 @@ class Generator:
 
         # loads correct tokenizer for the model
         self.tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME)
-        #load model with INT8 and not float32:
+        # load model with INT8 and not float32:
         quanti = BitsAndBytesConfig(load_in_8bit=True)
-        # AutoModelForCausalLM to have torch dtype access 
+        # AutoModelForCausalLM to have torch dtype access
         self.model: Any = AutoModelForCausalLM.from_pretrained(
             LLM_MODEL_NAME,
-            #torch_dtype=LLM_DTYPE, #!Use on mac or CUDA
+            # torch_dtype=LLM_DTYPE, #!Use on mac or CUDA
             quantization_config=quanti,
         ).to(self.device)  # type: ignore[arg-type]
         self.model.eval()
 
         if self.device != "cpu":
-            print("\nPytorch optimization model (first call will be slow)...\n")
-            # to make the next calls more optimized and faster (one-time tracing pass)
+            print("\nPytorch optimization model (first call is slow)...\n")
+            # make the next calls more optimized and faster
             self.model = torch.compile(self.model, mode="reduce-overhead")
 
         # bonus feature
@@ -83,8 +86,9 @@ class Generator:
                              source.last_character_index)
                 if chunk_key not in self._chunk_cache:
                     self._chunk_cache[chunk_key] = content[
-                        source.first_character_index:source.last_character_index
-                    ]
+                        source.first_character_index:
+                        source.last_character_index
+                        ]
                 chunk_text = self._chunk_cache[chunk_key]
 
                 chunk_str = (f"--- SOURCE FILE: {source.file_path}"
