@@ -1,4 +1,8 @@
+*This project has been created as part of the 42 cucurriculum by acaire-d*
+
 # RAG-against-the-machine
+
+## Description
 Build a Retrieval-Augmented Generation system that answers questions about codebases by retrieving relevant information and generating evidence-based responses, implementing intelligent chunking, efficient retrieval (TF-IDF/BM25)
 
 ## Installation
@@ -40,150 +44,112 @@ to evaluate the accuracy of the answers, with the ground truth dataset, use this
 uv run python -m src evaluate --student_results_path="data/output/search_results/dataset_code_public.json" --dataset_path="data/datasets/AnsweredQuestions/dataset_code_public.json" --k=10
 ```
 
-# Explanation of my work:
-## 1. models + makefile + pyproject.toml
-    copied models from subject
+# Development Log: How I Built This
 
-## 2. chunking code and text
-    chunking code works by using abstartct syntax tree. 
-    we are between where a code is parced and before it gets compiled to byte code. 
-use this to understand:
-1. visualize AST: https://astexplorer.net/
-2. learn about AST: https://greentreesnakes.readthedocs.io/en/latest/
-    after making the tree, we need to cut:
-    class object if less than 2000 chars.
-    else at the functions of the class. 
-    if more than 2000 chars, 
-    we will use the text chunking
+## 1. Setting Up the Foundation
 
-    chunking text will find the 200th caracter then, 
-    if between a word, find the nearest paragraph
-    else find the nearest next line
-    else find the nearest space. 
+Step one i, I set up the `pyproject.toml` and the `Makefile`. For the data structures, I copied the models exactly as they were defined in the subject PDF so everything aligns perfectly from the start.
 
-then we add theses chunks to the MinimalSource class where we know 
-the last and first index for the chunking. 
+## 2. Figuring Out the Chunking (Code & Text)
 
-## 3. ingestion model
+I had to split the files up, and I realized chunking code works best if I use an Abstract Syntax Tree (AST). Basically, I'm grabbing the code right after it gets parsed, but before it compiles down to bytecode. (checking out this to understand [AST Explorer](https://astexplorer.net/) or the [Green Tree Snakes docs](https://greentreesnakes.readthedocs.io/en/latest/) it really helped me).
 
-    the subject says:
-    "Read and process all files from the VLLM repository... and create a searchable index"
+Once the tree is built, I have to make the cuts:
 
-    this will not be done mannually so we create a class : ingestion for logistics and routing:
-    Crawl through every single folder and subfolder in a given directory.
+* If a class object is under 2000 characters, I keep it as one solid chunk.
+* If it's bigger than that, I break it down into the class's individual functions.
+* If a function *still* exceeds 2000 characters, I fall back to my text chunking method.
 
-        1. Pick up every file.
-        use os.walk() : https://www.tutorialspoint.com/python/os_walk.htm 
+For text chunking, my logic is straightforward: I find the 200th character. If that lands in the middle of a word, I look forward to find the nearest title break. then, the paragraph break. If there isn't one, I look for the next line break (`\n`), and if all else fails, I just snap to the nearest space.
 
-        2. Look at the file and ask, "Which tool handles this format?"
-        3. Route the file's text to the correct chunker.
-        4. Collect all the resulting chunks into one massive, master list.
+After cutting everything up, I pack these chunks into my `MinimalSource` class. This is super important because it lets me track the exact `first_index` and `last_index` of where that chunk originally lived.
 
-## 4 Indexing
+## 3. The Ingestion Engine
 
-    first problem, BM25 or TF-IDF are mathemaitcal models and dont undestand what a file path and 
-    a first_index/last_index from the MinimalSource means.
-    we need to find the raw string again...
-    with the make_corpus function
-        this function
+The subject clearly states: *"Read and process all files from the VLLM repository... and create a searchable index"*.
 
-    build_index function:
-    https://github.com/xhluca/bm25s 
-    == to understand how to quick start the bm25s
-    ok but what is a retreiver???
-    bm25 = best matching 25
-    its a scoring technique in stats.
-    counts every word frequency in every chunk. and then puts a penality to words that apprear 
-    in every chunk. 
-    then the actual index is where we save the mathematical weights of every token into an
-    optimised data base. (inverted index) == because we inverse document frequence, because we 
-    penalize the most frequent. 
+Obviously, I'm not doing that manually. I built an `Ingestion` class to handle all the logistics and routing. It crawls through every single folder and subfolder using Python's `os.walk()`.
+For every file it picks up, the script asks, "Which tool handles this format?" It routes the file's text to the correct chunker, and then collects every single resulting chunk into one massive master list.
 
-    now, the subjects states: "Store the index for fast retrieval".
-    we will create a directory to save 2 things:
-        1. the BM25 Model
-        2. my chunks
+4. Indexing & The BM25 Problem
 
-    ok now the indexes are saves but we need to able to search them...
-    with the bm25 lib we can use: self.retriever.retrieve(query_tokens, k=num_results)
+Models like BM25 or TF-IDF are purely statistical text models. They have no idea what a file path is, and they don't understand the first_index/last_index tracking in my MinimalSource objects. They only ingest raw tokens.
 
-    this will return a dict/tuple of the highest scoring chunks
-    with thoes numerical indexes, we check back our coprus chunks to get the actual Minimalsource object related to thoses values...
+So, you need a function like the make_corpus function to strip the metadata away and extract just the raw text back out.
 
-    What i had to do to make my model more precise. 
-    OK, so the indexing is very important for making it precise...
-    1. clean code text function:
-        what is really does: def my_function(x=5): becomes a list: ['def', 'my_function', 'x']
-        then, it breaks down the camelCase so: BlockSpaceManager becomes ['Block', 'Space', 'Manager']
-        this is better for searching 
-        same think for the snake_case : get_num_free_blocks becomes ['get', 'num', 'free', 'blocks']
-     2. the length normalisation in BM25 algo:
-        b = 1.0 -> pensalize long documents because it assums its rambling
-        b = 0.0 -> dosent event look at lenght
-        for docs, the reaserch suggests to have b=0.75 
-            if a 2000 word essay mentions coffee once
-            vs a 100 word essay mentions "cofee" once
-            we can assume the 100 word essay is more likely to be relavant
-        for code, a 2000 caracter class is not rambling.
-        if b = 0.75 it will only return the small utility files and not the real code
-        this is a very important distinction to make in the BM25 
+For the indexing, I used the bm25s library (look at their quickstart guide on GitHub). BM25 relies on two concepts: it counts the frequency of a word in a specific chunk (Term Frequency), but it also puts a mathematical penalty on words that show up in every chunk (Inverse Document Frequency).
 
-## generator
+What gets saved? the model builds an inverted index. It maps every unique token to a list of the exact chunks where that word appears, with its frequency stats. (The final "score" for a search is actually calculated dynamically at query time using these saved stats).
 
-    Now that we have the actual MinimalSource objects, we need to feed them to the Qwen LLM. But the LLM only reads strings, not objects.
+The subject also asks to "Store the index for fast retrieval". So, I created a directory specifically to save two things to disk: the serialized BM25 inverted index (so I don't have to recalculate the document frequencies every run), and my actual chunks so I can map the mathematical results back to my code.
 
-    once we found the right code, we need to explain it to the user
-    this is to generate natrual language answers and "Pass retrieved context to the LLM within token limits".
-    1. LLM cannot real python Minimal source object list... it only reads raw strings
-        we need to glue the users question and the retrived text together in a new structured string.
+**How I made the search actually precise:**
+making them return good results when I call `self.retriever.retrieve(query_tokens, k=num_results)` required two massive adjustments:
 
-    now we load the transformer... this will sreach the web and download the AI qwen model for us.
-        https://huggingface.co/docs/transformers/main_classes/pipelines
-    
-    2. generate answer:
-        we need to use the MinimalAnswer model 
+1. **Cleaning the code text:** Standard search is bad at reading code. I wrote a function so that something like `def my_function(x=5):` gets broken down into a clean list: `['def', 'my_function', 'x']`. I also force it to split camelCase (`BlockSpaceManager` becomes `['Block', 'Space', 'Manager']`) and snake_case (`get_num_free_blocks` becomes `['get', 'num', 'free', 'blocks']`). This makes a world of difference for search accuracy.
+2. **Tuning the BM25 Length Normalization ($b$):** In BM25, the $b$ parameter penalizes long documents because it assumes length equals rambling. The research suggests setting $b = 0.75$ for normal text (a 100-word essay about coffee is probably more relevant than a 2000-word essay that mentions coffee once). **But for code, this is a trap.** A 2000-character Python class isn't rambling; it's just a class. If I left $b = 0.75$, the retriever would only return tiny utility files and ignore my actual core logic blocks. Adjusting this was a crucial fix.
 
-    ok now i have to generate questions in less than 2 seconds... the self.pipeline(..) is not precise enough to change somme settings needed for optimisation.
+Once the retriever spits out the highest scoring numerical indexes, I just check those numbers against my master corpus to pull the correct `MinimalSource` objects.
 
-## batch 
+## 5. Hooking Up the Generator
 
-    we need to read the Json files.
-    theses 2 functions do that exactly
-    - search_dataset (Chapter V.6.5): Reads the UnansweredQuestions JSON, searches the index, and saves a srcSearchResults JSON.
+Now I have the right `MinimalSource` objects, but I need to feed them to the Qwen LLM so it can actually explain the code to the user in natural language (and hit the requirement to *"Pass retrieved context to the LLM within token limits"*).
 
-    - answer_dataset (Chapter V.6.7): Reads the newly created srcSearchResults JSON, passes those pre-found tickets to the LLM, and saves a srcSearchResultsAndAnswer JSON.
+Again, the LLM only reads raw strings, not Python objects. I had to write a parser to glue the user's question and the retrieved chunk text together into a new, clean string.
 
+I load up the transformer using Hugging Face pipelines, which handles downloading the Qwen AI model for me. The generated text then gets packed into my `MinimalAnswer` model.
 
+*The catch?* I had to generate these questions in under 2 seconds. The default `self.pipeline(...)` setup wasn't precise enough, so I had to dig in and tweak the settings to optimize the speed.
+
+## 6. Processing the Batches
+
+Finally, to handle the actual JSON files, I built two functions that do exactly that:
+
+* `search_dataset` (Chapter V.6.5): Reads the `UnansweredQuestions.json`, searches my index, and saves the hits to `srcSearchResults.json`.
+* `answer_dataset` (Chapter V.6.7): Picks up that newly created `srcSearchResults.json`, feeds those pre-found tickets to the LLM, and writes the final output to `srcSearchResultsAndAnswer.json`.
 
 ### Bonuses
 
-## LLM powered Querry Expansion
-    this was a good bonus to add becuse i wanted to augment the accuray for the code base search...
-    BM25 is a super good lexical search algo for strandar text but it does struggle with codebases.
-    if i try to look for "flash attention" BM25 will have trouble finind "triton_flash_attention()"
-    Camel snake functions are treated in this model as a single word... making the match super unlikely
-# implementation
-    before a search, we route the query to the Generator 
-    the generator will then brainstorm related words linked to the question
-    we then append theses to the user's original question
+## LLM Powered Query Expansion
+    this was a good bonus to add because I wanted to improve accuracy specifically for codebase search.
+    BM25 is a great lexical search algorithm for standard text but it really struggles with codebases.
+    if I search for "flash attention", BM25 will have trouble finding "triton_flash_attention()"
+    camelCase and snake_case functions are treated as a single word, making a match super unlikely.
 
-## Result catching (Memory Bank)
-    users tend to ask the same questions alot of times... so Running the model again in expensive and time-consuming for nothing.
-    No need to force the GPU to perdorme the same matrix multiplication it aleardy did
-# implementation
+### implementation
+    before a search, we route the query to the Generator
+    the generator brainstorms related keywords and synonyms linked to the question
+    we then append these to the user's original query before searching
+
+## Result Caching (Memory Bank)
+    users tend to ask the same questions a lot... so running the model again is expensive and time-consuming for nothing.
+    no need to force the GPU to perform the same matrix multiplications it already did.
+
+### implementation
     create a hash map in the generator as a "memory bank"
-    before answering a question it checks if the same question is already there.
-    if found we just give out the same answer directly
+    before answering a question it checks if the exact same question is already in there
+    if found, we just return the cached answer directly
 
-## Seamntic Embedding
+## Semantic Embedding
     2 new concepts:
-        sentence transformers:
-        running a raw text string into a sentence transformer model is actually translating every chunk of text as a dense array of numbers == vectors
-        we also normalize the embeddings to the lenght of 1 so we can calculate the cosine similarity between vectors. 
-        FAISS: facebook AI Similarity Search = the most optimal library
-        this is about building a database and being able to search massive databases of vectors efficiently.
 
-    1 update the indexr.py to have both BM25 and semantic embedding
+    sentence transformers:
+        running a raw text string through a sentence transformer model translates every chunk of text into a dense array of numbers — a vector.
+        we also normalize the embeddings to length 1 so we can measure similarity between vectors using cosine similarity.
+
+    FAISS (Facebook AI Similarity Search):
+        the most efficient library for building and searching through massive vector databases.
+
+### implementation
+    updated indexer.py to build both a BM25 index and a FAISS semantic index in parallel.
+    at search time, both scores are combined (hybrid retrieval) and the top-k results are returned.
+
+## Performance Analysis (private dataset, hybrid BM25 + FAISS)
+
+|               | Docs          | Code         |
+|---------------|---------------|--------------|
+| Recall@10     | **95.0%** ✅  | **79.0%** ✅ |
+| Precision@10  | 13.7%         | 10.3%        |
 
 ## the schools computer problems...
 
@@ -212,27 +178,18 @@ We also need to control where the computer will save the data and route everythi
     ```
 
 
-## ressources:
+## Resources & References
 
-    https://www.youtube.com/watch?v=8OJC21T2SL4
+    - AST explorer. (n.d.). Retrieved May 18, 2026, from https://astexplorer.net/
 
-    https://www.chunkviz.com/
+    - Green tree snakes: The missing Python AST docs. (n.d.). Retrieved May 18, 2026, from https://greentreesnakes.readthedocs.io/en/latest/
 
+    - Hugging Face. (n.d.). Pipelines. Retrieved May 18, 2026, from https://huggingface.co/docs/transformers/main_classes/pipelines
 
-## Evaluation preparation:
-Need to know the difference between all the steps taken:
-Indexing:
-Retrieval:
-Augmenting:
-Generation:
+    - Kamradt, G. (n.d.). ChunkViz. Retrieved May 18, 2026, from https://www.chunkviz.com/
 
-questions:
-What happens if I change the max chunk size on the retrieval performance
-Explain chunking strategies
+    - Kamradt, G. (n.d.). The 5 levels of text splitting for retrieval [Video]. YouTube. Retrieved May 18, 2026, from https://www.youtube.com/watch?v=8OJC21T2SL4
 
+    - Tutorialspoint. (n.d.). Python os.walk() method. Retrieved May 18, 2026, from https://www.tutorialspoint.com/python/os_walk.htm
 
-1. "What is Retrieval-Augmented Generation (RAG) and why is it useful?"
-2. "Walk me through your complete RAG pipeline, from raw documents to a generated answer."
-3. "What is the difference between TF-IDF and BM25 as retrieval methods?"
-4. "What implementation choices did you make and why? What trade-offs did you consider?"
-5. "If you had more time, what would you improve in your system?"
+    - xhluca. (n.d.). bm25s [Computer software]. GitHub. Retrieved May 18, 2026, from https://github.com/xhluca/bm25s

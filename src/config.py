@@ -49,7 +49,7 @@ OMP_NUM_THREADS: str = "8"
 
 # ── Prompt construction
 # Maximum total characters of retrieved source text injected into the prompt.
-MAX_CONTEXT_CHARS: int = 1500
+MAX_CONTEXT_CHARS: int = 2000
 
 # Maximum number of retrieved sources spliced into the prompt.
 MAX_CONTEXT_SOURCES: int = 3
